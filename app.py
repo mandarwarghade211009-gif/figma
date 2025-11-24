@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Professional Figma UI Extractor & Angular Code Processor with Smart ImageURL Optimization
-Enterprise-grade design system for UI extraction and code processing
+Universal Header Detection with Flexible Filtering
 """
 
 import streamlit as st
@@ -21,15 +21,20 @@ import os
 # -----------------------------------------------------
 # SMART IMAGEURL FILTER CONFIGURATION
 # -----------------------------------------------------
+# Generic keywords for header detection (works across all Figma designs)
+HEADER_KEYWORDS = ['header', 'navbar', 'nav-bar', 'navigation', 'topnav', 'top-nav', 
+                   'toolbar', 'appbar', 'app-bar', 'titlebar', 'title-bar', 'masthead']
+
 # The category and keyword lists used for strict icon/logo detection
 logo_keywords = ['logo', 'brand', 'company', 'trademark', 'wellsky']
 icon_keywords = [
     'icon', 'glyph', 'symbol', 'badge', 'avatar', 'star', 'check', 'arrow',
     'menu', 'hamburger', 'close', 'search', 'notification', 'bell', 'user',
-    'profile', 'gift', 'question', 'help', 'caret', 'dropdown', 'expand'
+    'profile', 'gift', 'question', 'help', 'caret', 'dropdown', 'expand',
+    'chevron', 'plus', 'minus', 'info', 'warning', 'error', 'success'
 ]
 icon_fonts = ['Font Awesome', 'Material Icons', 'Ionicons', 'Glyphicons', 'IcoFont', 
-              'Material Design Icons', 'Feather', 'Heroicons']
+              'Material Design Icons', 'Feather', 'Heroicons', 'Remix Icon', 'Tabler Icons']
 
 # Size thresholds for filtering decorative images
 MIN_ICON_SIZE = 8  # pixels
@@ -153,6 +158,20 @@ def filter_invisible_nodes(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         node["children"] = filtered
     return node
 
+def is_in_header(path: str, name: str) -> bool:
+    """
+    Universal header detection - works for any Figma design
+    """
+    path_lower = path.lower()
+    name_lower = name.lower()
+    
+    # Check if any header keyword is in the path or name
+    for keyword in HEADER_KEYWORDS:
+        if keyword in path_lower or keyword in name_lower:
+            return True
+    
+    return False
+
 # -------------------------
 # FIGMA API + NODE WALKERS
 # -------------------------
@@ -179,17 +198,24 @@ def walk_nodes_collect_images_and_ids(nodes_payload: Dict[str, Any]) -> Tuple[Se
     node_ids: List[str] = []
     node_meta: Dict[str, Dict[str, Any]] = {}
     
-    def visit(n: Dict[str, Any]):
+    def visit(n: Dict[str, Any], current_path: str = ""):
         if not isinstance(n, dict):
             return
         nid = n.get("id")
+        node_name = n.get("name", "")
+        
+        # Build path for context
+        new_path = f"{current_path}/{node_name}" if current_path else node_name
+        
         if nid:
             node_ids.append(nid)
             # Extract comprehensive metadata for filtering
             meta = {
                 "id": nid,
-                "name": n.get("name", ""),
+                "name": node_name,
                 "type": n.get("type", ""),
+                "path": new_path,
+                "isInHeader": is_in_header(new_path, node_name),
                 "absoluteBoundingBox": n.get("absoluteBoundingBox", {}),
                 "fills": n.get("fills", []),
                 "strokes": n.get("strokes", []),
@@ -209,7 +235,7 @@ def walk_nodes_collect_images_and_ids(nodes_payload: Dict[str, Any]) -> Tuple[Se
                 if ref:
                     image_refs.add(ref)
         for c in n.get("children", []) or []:
-            visit(c)
+            visit(c, new_path)
     
     if isinstance(nodes_payload.get("nodes"), dict):
         for entry in nodes_payload["nodes"].values():
@@ -260,12 +286,20 @@ def resolve_image_urls(file_key: str, image_refs: Set[str], node_ids: List[str],
                     renders_map[nid] = None
     return {k: v for k, v in fills_map.items() if k in image_refs}, renders_map
 
-def is_icon_or_logo_node(meta: Dict[str, Any]) -> bool:
+def should_include_imageurl(meta: Dict[str, Any], filter_mode: str = "balanced") -> bool:
     """
-    Determine if a node is an icon or logo based on comprehensive metadata analysis[web:4][web:8]
+    Universal image filtering with configurable modes:
+    - "all_header": Include ALL imageUrls from header section
+    - "icons_only": Only icons/logos (strictest)
+    - "balanced": Icons + semantic images (default)
     """
     name = meta.get("name", "").lower()
     node_type = meta.get("type", "").upper()
+    is_header = meta.get("isInHeader", False)
+    
+    # MODE: All Header - Include everything from header
+    if filter_mode == "all_header" and is_header:
+        return True
     
     # Check name-based keywords
     is_logo = any(keyword in name for keyword in logo_keywords)
@@ -277,11 +311,8 @@ def is_icon_or_logo_node(meta: Dict[str, Any]) -> bool:
         width = bbox.get("width", 0)
         height = bbox.get("height", 0)
         
-        # Icon size check
         is_icon_sized = (MIN_ICON_SIZE <= width <= MAX_ICON_SIZE and 
                         MIN_ICON_SIZE <= height <= MAX_ICON_SIZE)
-        
-        # Logo size check
         is_logo_sized = (MIN_LOGO_SIZE <= width <= MAX_LOGO_SIZE and 
                         MIN_LOGO_SIZE <= height <= MAX_LOGO_SIZE)
     else:
@@ -297,13 +328,30 @@ def is_icon_or_logo_node(meta: Dict[str, Any]) -> bool:
         characters = meta.get("characters", "")
         is_short_text = len(characters.strip()) <= 3
         
-        return is_icon_font or (is_short_text and is_icon)
+        # Icon fonts always included
+        if is_icon_font:
+            return True
+        
+        # Short text with icon name
+        if is_short_text and is_icon:
+            return True
+        
+        # Otherwise exclude text elements
+        return False
     
-    # Check if node has image fills (actual images, not decorative backgrounds)
+    # Check if node has image fills
     fills = meta.get("fills", [])
     has_image_fill = any(f.get("type") == "IMAGE" for f in fills if isinstance(f, dict))
     
-    # Final decision logic
+    # MODE: Icons Only
+    if filter_mode == "icons_only":
+        if is_logo and is_logo_sized:
+            return True
+        if is_icon and is_icon_sized:
+            return True
+        return False
+    
+    # MODE: Balanced (default)
     if is_logo and is_logo_sized:
         return True
     if is_icon and (is_icon_sized or has_image_fill):
@@ -311,12 +359,17 @@ def is_icon_or_logo_node(meta: Dict[str, Any]) -> bool:
     if node_type in ["VECTOR", "GROUP", "COMPONENT", "INSTANCE"] and (is_icon or is_logo):
         return True
     
+    # In balanced mode, include semantic images in header
+    if filter_mode == "balanced" and is_header and has_image_fill:
+        return True
+    
     return False
 
 def build_icon_map(nodes_payload: Dict[str, Any], filtered_fills: Dict[str, str], 
-                   renders_map: Dict[str, Optional[str]], node_meta: Dict[str, Dict[str, Any]]) -> Dict[str, str]:
+                   renders_map: Dict[str, Optional[str]], node_meta: Dict[str, Dict[str, Any]], 
+                   filter_mode: str = "balanced") -> Dict[str, str]:
     """
-    Build icon map with strict filtering based on metadata analysis
+    Build icon map with configurable filtering
     """
     node_first_ref: Dict[str, str] = {}
     
@@ -344,8 +397,8 @@ def build_icon_map(nodes_payload: Dict[str, Any], filtered_fills: Dict[str, str]
     
     node_to_url: Dict[str, str] = {}
     for nid, meta in node_meta.items():
-        # Only include imageUrl if node passes strict icon/logo filter
-        if not is_icon_or_logo_node(meta):
+        # Check if should include based on filter mode
+        if not should_include_imageurl(meta, filter_mode):
             continue
             
         url = None
@@ -522,13 +575,18 @@ def should_include(node: Dict[str, Any]) -> bool:
 def classify_bucket(comp: Dict[str, Any]) -> str:
     t = (comp.get("type") or "").upper()
     name = (comp.get("name") or "").lower()
+    path = (comp.get("path") or "").lower()
+    
+    # Check if in header
+    is_header = is_in_header(path, name)
+    
     if t == "TEXT":
         return "textElements"
     if "button" in name:
         return "buttons"
     if any(k in name for k in ['input', 'search', 'textfield', 'field']):
         return "inputs"
-    if any(k in name for k in ['nav', 'menu', 'sidebar', 'toolbar', 'header', 'footer', 'breadcrumb']):
+    if is_header or any(k in name for k in ['nav', 'menu', 'sidebar', 'toolbar', 'breadcrumb']):
         return "navigation"
     if comp.get("imageUrl") or comp.get("image_url"):
         return "images"
@@ -599,6 +657,7 @@ def organize_for_angular(components: List[Dict[str, Any]]) -> Dict[str, Any]:
                 'iconKeywords': icon_keywords,
                 'logoKeywords': logo_keywords,
                 'iconFonts': icon_fonts,
+                'headerKeywords': HEADER_KEYWORDS,
                 'sizeThresholds': {
                     'minIconSize': MIN_ICON_SIZE,
                     'maxIconSize': MAX_ICON_SIZE,
@@ -608,15 +667,26 @@ def organize_for_angular(components: List[Dict[str, Any]]) -> Dict[str, Any]:
             }
         },
         'textElements': [], 'buttons': [], 'inputs': [], 'containers': [],
-        'images': [], 'navigation': [], 'vectors': [], 'other': []
+        'images': [], 'navigation': [], 'vectors': [], 'other': [],
+        'header': []  # Separate header section
     }
+    
     for c in components:
-        organized.setdefault(classify_bucket(c), []).append(c)
+        # Add to regular categories
+        cat = classify_bucket(c)
+        organized.setdefault(cat, []).append(c)
+        
+        # Also add to header if in header path
+        path = c.get('path', '')
+        name = c.get('name', '')
+        if is_in_header(path, name):
+            organized['header'].append(c)
+    
     return organized
 
 def extract_ui_components(merged_payload: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Extract UI components with metadata-based imageURL optimization already applied
+    Extract UI components with metadata-based imageURL optimization
     """
     roots = find_document_roots(merged_payload)
     if not roots:
@@ -631,6 +701,16 @@ def extract_ui_components(merged_payload: Dict[str, Any]) -> Dict[str, Any]:
     total_with_imageurl = sum(1 for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']
                               for elem in organized.get(cat, []) if 'imageUrl' in elem)
     
+    # Header-specific stats
+    header_elements = organized.get('header', [])
+    header_with_imageurl = sum(1 for elem in header_elements if 'imageUrl' in elem)
+    
+    # Count by type in header
+    header_by_type = {}
+    for elem in header_elements:
+        elem_type = elem.get('type', 'UNKNOWN')
+        header_by_type[elem_type] = header_by_type.get(elem_type, 0) + 1
+    
     stats_by_category = {}
     for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
         count = sum(1 for elem in organized.get(cat, []) if 'imageUrl' in elem)
@@ -640,7 +720,13 @@ def extract_ui_components(merged_payload: Dict[str, Any]) -> Dict[str, Any]:
     organized['metadata']['imageUrlStats'] = {
         'totalIncluded': total_with_imageurl,
         'byCategory': stats_by_category,
-        'optimizationStrategy': 'metadata-based filtering with size and keyword analysis'
+        'headerStats': {
+            'totalElements': len(header_elements),
+            'withImageUrl': header_with_imageurl,
+            'percentage': round((header_with_imageurl / len(header_elements) * 100), 1) if len(header_elements) > 0 else 0,
+            'byType': header_by_type
+        },
+        'optimizationStrategy': 'universal header detection with configurable filtering'
     }
     
     return organized
@@ -653,7 +739,7 @@ def main():
     <div style='text-align: center; padding: 1rem 0 2rem 0;'>
         <h1 style='margin-bottom: 0.5rem;'>🎨 Figma UI Extractor</h1>
         <p style='font-size: 1.05rem; color: #6B7280; font-weight: 500;'>
-            Enterprise-Grade UI Component Extraction with Smart ImageURL Optimization
+            Universal Header Detection & Smart ImageURL Optimization
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -671,10 +757,15 @@ def main():
         
         st.markdown("---")
         st.markdown("### 🎯 Filter Configuration")
+        filter_mode = st.selectbox(
+            "Filtering Mode",
+            options=["all_header", "balanced", "icons_only"],
+            index=1,
+            help="all_header: Include ALL images from header | balanced: Icons + semantic images | icons_only: Strictest filtering"
+        )
         st.markdown(f"**Icon Size:** {MIN_ICON_SIZE}-{MAX_ICON_SIZE}px")
         st.markdown(f"**Logo Size:** {MIN_LOGO_SIZE}-{MAX_LOGO_SIZE}px")
-        st.markdown(f"**Icon Keywords:** {len(icon_keywords)}")
-        st.markdown(f"**Logo Keywords:** {len(logo_keywords)}")
+        st.markdown(f"**Header Keywords:** {len(HEADER_KEYWORDS)}")
         
         st.markdown("---")
         st.markdown("### 📚 Resources")
@@ -691,7 +782,7 @@ def main():
     
     with tab1:
         st.markdown("### Figma Component Extraction")
-        st.markdown("Extract UI components with **metadata-based imageURL optimization** for Angular agents.")
+        st.markdown("Extract UI components with **universal header detection** and smart imageURL optimization.")
         st.markdown("---")
         
         col1, col2 = st.columns(2)
@@ -714,17 +805,20 @@ def main():
                     progress.progress(5)
                     nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
                     
-                    status.text("🖼️ Collecting images and comprehensive node metadata...")
+                    status.text("🖼️ Collecting images and metadata (with header detection)...")
                     progress.progress(25)
                     image_refs, node_id_list, node_meta = walk_nodes_collect_images_and_ids(nodes_payload)
                     
-                    status.text("🔗 Resolving image URLs from Figma...")
+                    # Get filter mode from session state
+                    current_filter_mode = filter_mode if 'filter_mode' in locals() else "balanced"
+                    
+                    status.text(f"🔗 Resolving image URLs (mode: {current_filter_mode})...")
                     progress.progress(50)
                     filtered_fills, renders_map = resolve_image_urls(file_key, image_refs, node_id_list, token)
                     
-                    status.text("🎨 Applying metadata-based filtering and building icon map...")
+                    status.text("🎨 Applying smart filtering and building icon map...")
                     progress.progress(70)
-                    node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
+                    node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta, current_filter_mode)
                     
                     merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
                     
@@ -739,7 +833,7 @@ def main():
                     st.session_state['stats']['files_processed'] += 1
                     
                     progress.progress(100)
-                    st.success("✅ Extraction completed with metadata-based optimization!")
+                    st.success(f"✅ Extraction completed with {current_filter_mode} mode!")
                     
                     st.markdown("### 📊 Extraction Summary")
                     col1, col2, col3, col4 = st.columns(4)
@@ -752,21 +846,37 @@ def main():
                     with col4:
                         st.metric("Containers", len(final_output.get('containers', [])))
                     
+                    # Header-specific metrics
+                    header_stats = final_output['metadata'].get('imageUrlStats', {}).get('headerStats', {})
+                    if header_stats.get('totalElements', 0) > 0:
+                        st.markdown("### 🎯 Header Analysis")
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Header Elements", header_stats['totalElements'])
+                        with col2:
+                            st.metric("With ImageURL", header_stats['withImageUrl'])
+                        with col3:
+                            st.metric("Percentage", f"{header_stats['percentage']}%")
+                        
+                        with st.expander("📋 Header Elements by Type"):
+                            for elem_type, count in sorted(header_stats.get('byType', {}).items(), key=lambda x: x[1], reverse=True):
+                                st.markdown(f"- **{elem_type}**: `{count}` elements")
+                    
                     img_stats = final_output['metadata'].get('imageUrlStats', {})
                     if img_stats.get('totalIncluded', 0) > 0:
-                        st.markdown("### 🎯 ImageURL Optimization Results")
+                        st.markdown("### 🖼️ ImageURL Distribution")
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.metric("Total imageUrls Included", img_stats['totalIncluded'])
+                            st.metric("Total imageUrls", img_stats['totalIncluded'])
                         with col2:
-                            st.info("✨ Only icons, logos, and semantic images included")
+                            st.info(f"✨ Filter: {img_stats.get('optimizationStrategy', 'N/A')}")
                         
-                        with st.expander("📋 ImageURL Distribution by Category"):
-                            for cat, count in img_stats.get('byCategory', {}).items():
+                        with st.expander("📋 ImageURL by Category"):
+                            for cat, count in sorted(img_stats.get('byCategory', {}).items(), key=lambda x: x[1], reverse=True):
                                 st.markdown(f"- **{cat}**: `{count}` imageUrls")
                     
                     with st.expander("📋 Full Category Breakdown"):
-                        for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
+                        for cat in ['header', 'textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
                             total_count = len(final_output.get(cat, []))
                             img_count = sum(1 for elem in final_output.get(cat, []) if 'imageUrl' in elem)
                             if total_count > 0:
@@ -823,15 +933,13 @@ def main():
         
         def add_url_prefix_to_angular_code(text: str, url_prefix: str) -> Tuple[str, int]:
             import re
-            
             patterns = [
-    (re.compile(r'(src\s*=\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-    (re.compile(r'(\[src\]\s*=\s*["\\\']\s*)(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-    (re.compile(r'(imageUrl\s*:\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-    (re.compile(r'(url\(\s*["\'])(%s)(["\']\s*\))' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-    (re.compile(r'(["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        ]
-
+                (re.compile(r'(src\s*=\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+                (re.compile(r'(\[src\]\s*=\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+                (re.compile(r'(imageUrl\s*:\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+                (re.compile(r'(url\(\s*["\'])(%s)(["\\']\s*\))' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+                (re.compile(r'(["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+            ]
             modified = text
             total_replacements = 0
             for pat, repl in patterns:
