@@ -634,4 +634,240 @@ def main():
 
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Files Process)
+            st.metric("Files Processed", st.session_state['stats']['files_processed'])
+        with col2:
+            st.metric("Downloads", st.session_state['stats']['downloads'])
+
+        st.markdown("---")
+        st.markdown("### 📚 Resources")
+        st.markdown("""
+        - [Figma API Documentation](https://www.figma.com/developers/api)
+        - [Angular Framework](https://angular.io)
+        - [ReportLab](https://www.reportlab.com)
+        """)
+        st.markdown("---")
+        st.markdown("### 🔐 Security")
+        st.info("API tokens are used only for fetching and are not persisted.")
+
+    tab1, tab2 = st.tabs(["🎯 Figma Extraction", "⚡ Angular Processor"])
+
+    # -------- Figma Extraction --------
+    with tab1:
+        st.markdown("### Figma Component Extraction (Icons/Logos Only for imageUrl)")
+        st.markdown("Metadata is extracted for all components; imageUrl is only set for logo/icon/symbol nodes.")
+        st.markdown("---")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            file_key = st.text_input("📁 Figma File Key", value="", help="Figma file key (from file URL)")
+        with col2:
+            node_ids = st.text_input("🔗 Node IDs (comma-separated)", value="", help="Optional: comma-separated node ids")
+
+        token = st.text_input("🔑 Figma Personal Access Token", type="password", help="Generate in Figma account settings")
+
+        if st.button("🚀 Extract UI Components"):
+            if not token or not file_key:
+                st.error("⚠️ Please provide a file key and a Figma access token.")
+            else:
+                try:
+                    progress = st.progress(0)
+                    status = st.empty()
+
+                    status.text("📡 Fetching nodes from Figma API...")
+                    progress.progress(10)
+                    nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
+
+                    status.text("🎯 Collecting logo/icon image references only...")
+                    progress.progress(30)
+                    icon_refs = walk_for_icon_image_refs(nodes_payload)
+
+                    status.text("🔗 Resolving icon/logo URLs from Figma...")
+                    progress.progress(55)
+                    icon_ref_to_url = resolve_icon_image_urls(file_key, icon_refs, token)
+
+                    status.text("🎨 Merging icon URLs into nodes (imageUrl only on icons/logos)...")
+                    progress.progress(75)
+                    merged_payload = merge_icon_urls_into_nodes(nodes_payload, icon_ref_to_url)
+
+                    status.text("📦 Extracting structured components...")
+                    progress.progress(90)
+                    final_output = extract_ui_components(merged_payload)
+
+                    # Optional: keep UUIDs only in JSON (strip prefix), or keep full URLs if you prefer.
+                    # Here we keep UUIDs (cleaner for Angular mapping).
+                    sanitized = remove_url_prefix_from_json(
+                        final_output,
+                        "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/"
+                    )
+
+                    st.session_state['metadata_json'] = sanitized
+                    st.session_state['stats']['files_processed'] += 1
+                    progress.progress(100)
+                    st.success("✅ Extraction completed successfully!")
+
+                    st.markdown("### 📊 Extraction Summary")
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Total Components", sanitized['metadata']['totalComponents'])
+                    with col2:
+                        st.metric("Text Elements", len(sanitized.get('textElements', [])))
+                    with col3:
+                        st.metric("Buttons", len(sanitized.get('buttons', [])))
+                    with col4:
+                        st.metric("Icon/Logo Images", len(sanitized.get('images', [])))
+
+                    with st.expander("📋 Category Breakdown"):
+                        for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
+                            count = len(sanitized.get(cat, []))
+                            if count > 0:
+                                st.markdown(f"- **{cat}**: `{count}`")
+                except Exception as e:
+                    st.error(f"❌ Error during extraction: {str(e)}")
+
+        if 'metadata_json' in st.session_state:
+            st.markdown("---")
+            st.markdown("### 💾 Download Extracted Data")
+            json_str = json.dumps(st.session_state['metadata_json'], indent=2, ensure_ascii=False)
+
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.download_button(
+                    "📥 Download metadata.json",
+                    data=json_str,
+                    file_name="metadata.json",
+                    mime="application/json",
+                    on_click=lambda: st.session_state['stats'].update(
+                        {'downloads': st.session_state['stats']['downloads'] + 1}
+                    )
+                )
+            with col2:
+                st.caption(f"Size: {len(json_str):,} bytes")
+
+    # -------- Angular Processor --------
+    with tab2:
+        st.markdown("### Angular Code Image URL Processor")
+        st.markdown("Resolve ONLY UUIDs used in Angular code to full Figma image URLs and rewrite the code.")
+        st.markdown("---")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            file_key_for_urls = st.text_input(
+                "📁 Figma File Key (for URL resolution)",
+                value="",
+                help="Used to resolve image URLs for UUIDs detected in the uploaded code."
+            )
+        with col2:
+            token_for_urls = st.text_input(
+                "🔑 Figma Token (for URL resolution)",
+                type="password",
+                help="Figma token for resolving image URLs."
+            )
+
+        uploaded = st.file_uploader(
+            "📤 Upload Angular Code File",
+            type=['txt', 'md', 'html', 'ts', 'js', 'pdf'],
+            help="Supported formats: .txt, .md, .html, .ts, .js, .pdf"
+        )
+
+        if uploaded:
+            st.info(f"✅ File uploaded: **{uploaded.name}**")
+
+            if st.button("⚡ Process Angular Code"):
+                try:
+                    raw = uploaded.read()
+                    text = decode_bytes_to_text(raw)
+                    if uploaded.name.lower().endswith('.pdf'):
+                        st.warning("⚠️ PDF->text extraction is basic; results may vary.")
+
+                    uuids = detect_uuids_in_text(text)
+                    if not uuids:
+                        st.warning("No UUIDs detected in the uploaded file.")
+                        return
+
+                    if not file_key_for_urls or not token_for_urls:
+                        st.error("Please provide Figma file key and token to resolve full URLs.")
+                        return
+
+                    st.info(f"Resolving {len(uuids)} UUIDs from Figma...")
+                    uuid_to_url = resolve_image_urls_for_uuids(
+                        file_key=file_key_for_urls,
+                        uuids=uuids,
+                        token=token_for_urls
+                    )
+
+                    if not uuid_to_url:
+                        st.error("No image URLs could be resolved from Figma for the detected UUIDs.")
+                        return
+
+                    modified, replaced = add_full_urls_to_angular_code(text, uuid_to_url)
+
+                    st.session_state['angular_output'] = modified
+                    st.session_state['angular_filename'] = uploaded.name
+                    st.session_state['stats']['files_processed'] += 1
+
+                    st.success("✅ Angular code processed successfully!")
+
+                    st.markdown("### 📊 Processing Summary")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("UUIDs Found", len(uuids))
+                    with col2:
+                        st.metric("URLs Resolved", len(uuid_to_url))
+                    with col3:
+                        st.metric("Replacements Made", replaced)
+
+                    with st.expander("🔍 Sample Mapping"):
+                        sample_uuid = next(iter(uuid_to_url.keys()))
+                        st.code(f"UUID: {sample_uuid}", language="text")
+                        st.code(f"URL:  {uuid_to_url[sample_uuid]}", language="text")
+
+                except Exception as e:
+                    st.error(f"❌ Error processing file: {str(e)}")
+
+        if 'angular_output' in st.session_state:
+            st.markdown("---")
+            st.markdown("### 💾 Download Processed Code")
+            base = st.session_state['angular_filename'].rsplit('.', 1)[0]
+
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.download_button(
+                    "📄 Download as .txt",
+                    data=st.session_state['angular_output'],
+                    file_name=f"{base}_modified.txt",
+                    mime="text/plain",
+                    on_click=lambda: st.session_state['stats'].update(
+                        {'downloads': st.session_state['stats']['downloads'] + 1}
+                    )
+                )
+            with col2:
+                st.download_button(
+                    "📝 Download as .md",
+                    data=st.session_state['angular_output'],
+                    file_name=f"{base}_modified.md",
+                    mime="text/markdown",
+                    on_click=lambda: st.session_state['stats'].update(
+                        {'downloads': st.session_state['stats']['downloads'] + 1}
+                    )
+                )
+            with col3:
+                pdf_buf = create_text_to_pdf(st.session_state['angular_output'])
+                st.download_button(
+                    "📕 Download as .pdf",
+                    data=pdf_buf,
+                    file_name=f"{base}_modified.pdf",
+                    mime="application/pdf",
+                    on_click=lambda: st.session_state['stats'].update(
+                        {'downloads': st.session_state['stats']['downloads'] + 1}
+                    )
+                )
+
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align: center; padding: 1.5rem 0; color: #6B7280;'>
+        <p style='margin: 0; font-size: 0.9rem;'>Built with ❤️ using <strong>Streamlit</strong> | Professional Edition</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
