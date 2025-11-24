@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
 Professional Figma UI Extractor & Angular Code Processor
-Enterprise-grade design system for UI extraction and code processing
-OPTIMIZED VERSION - Selective image URL extraction
+Enterprise-grade design system with RATE LIMIT HANDLING
 """
 
 import streamlit as st
@@ -10,6 +9,8 @@ import requests
 import json
 import re
 import datetime
+import time
+import random
 from io import BytesIO
 from typing import Any, Dict, List, Set, Tuple, Optional
 from reportlab.lib.pagesizes import letter
@@ -17,46 +18,113 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.units import inch
 import copy
+from functools import wraps
 
 # -----------------------------------------------------
 # CONSTANTS & CONFIGURATION
 # -----------------------------------------------------
 
-# Node types that are considered image-worthy
 IMAGE_WORTHY_TYPES = {'VECTOR', 'RECTANGLE', 'ELLIPSE', 'POLYGON', 'STAR', 'LINE', 'BOOLEAN_OPERATION'}
-
-# Keywords in node names that indicate image/icon usage
 IMAGE_NAME_KEYWORDS = {'icon', 'logo', 'avatar', 'image', 'img', 'photo', 'picture', 'graphic', 'illustration', 'badge', 'emoji'}
-
-# Figma API default image prefix
 DEFAULT_IMAGE_PREFIX = "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/"
-
-# Batch size for API requests
 API_BATCH_SIZE = 200
-
-# UUID pattern for Angular code processing
 UUID_RE = r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
+
+# Rate limiting configuration
+MAX_RETRIES = 6
+INITIAL_RETRY_DELAY = 2  # seconds
+MAX_RETRY_DELAY = 120    # seconds (2 minutes)
+JITTER_MAX = 1.0         # seconds of random jitter
+
+# -----------------------------------------------------
+# RATE LIMIT HANDLING DECORATOR
+# -----------------------------------------------------
+
+def retry_with_exponential_backoff(max_retries=MAX_RETRIES):
+    """
+    Decorator that implements exponential backoff with jitter for API calls.
+    Handles 429 rate limit errors from Figma API.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            retry_count = 0
+            retry_delay = INITIAL_RETRY_DELAY
+            
+            while retry_count <= max_retries:
+                try:
+                    response = func(*args, **kwargs)
+                    return response
+                    
+                except requests.exceptions.HTTPError as e:
+                    # Check if it's a 429 rate limit error
+                    if e.response.status_code == 429:
+                        retry_count += 1
+                        
+                        if retry_count > max_retries:
+                            raise RuntimeError(
+                                f"❌ Maximum retry attempts ({max_retries}) exceeded. "
+                                f"Figma API rate limit still in effect. Please wait before retrying."
+                            ) from e
+                        
+                        # Try to get Retry-After header from response
+                        retry_after = e.response.headers.get('Retry-After')
+                        
+                        if retry_after:
+                            try:
+                                wait_time = int(retry_after)
+                            except ValueError:
+                                wait_time = retry_delay
+                        else:
+                            # Use exponential backoff with jitter
+                            wait_time = min(retry_delay, MAX_RETRY_DELAY)
+                            jitter = random.uniform(0, JITTER_MAX)
+                            wait_time += jitter
+                        
+                        # Display user-friendly message
+                        st.warning(
+                            f"⏳ Rate limit hit (attempt {retry_count}/{max_retries}). "
+                            f"Waiting {wait_time:.1f} seconds before retry..."
+                        )
+                        
+                        # Wait before retrying
+                        time.sleep(wait_time)
+                        
+                        # Exponentially increase delay for next attempt
+                        retry_delay *= 2
+                        
+                    else:
+                        # Not a rate limit error, re-raise
+                        raise
+                        
+                except requests.exceptions.RequestException as e:
+                    # Network or other request errors
+                    raise RuntimeError(f"Network error: {str(e)}") from e
+            
+            # Should not reach here, but just in case
+            raise RuntimeError("Unexpected error in retry logic")
+        
+        return wrapper
+    return decorator
 
 # -----------------------------------------------------
 # PROFESSIONAL THEMING
 # -----------------------------------------------------
+
 def apply_professional_styling():
     """Apply professional, government-style CSS theme"""
     st.markdown("""
     <style>
-    /* Main Container */
     .stApp {
         background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
     
-    /* Headers */
     h1, h2, h3 {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-weight: 700;
         color: #1a202c;
     }
     
-    /* Buttons */
     .stButton>button {
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -73,7 +141,6 @@ def apply_professional_styling():
         box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
     }
     
-    /* Input Fields */
     .stTextInput>div>div>input {
         border: 2px solid #e2e8f0;
         border-radius: 6px;
@@ -81,20 +148,17 @@ def apply_professional_styling():
         font-size: 1rem;
     }
     
-    /* Metrics */
     [data-testid="stMetricValue"] {
         font-size: 2rem;
         font-weight: 700;
         color: #667eea;
     }
     
-    /* Cards */
     .stAlert {
         border-radius: 8px;
         border-left: 4px solid #667eea;
     }
     
-    /* Sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
     }
@@ -105,7 +169,6 @@ def apply_professional_styling():
     </style>
     """, unsafe_allow_html=True)
 
-# Streamlit Page Config
 st.set_page_config(
     page_title="Figma UI Extractor | Professional Edition",
     page_icon="🎨",
@@ -114,45 +177,6 @@ st.set_page_config(
 )
 
 apply_professional_styling()
-
-# -----------------------------------------------------
-# OPTIMIZATION: Image-Worthy Node Detection
-# -----------------------------------------------------
-
-def is_image_worthy_node(node: Dict[str, Any]) -> bool:
-    """
-    Determines if a node should receive image URL assignment.
-    Only returns True for nodes that are genuinely image/icon layers.
-    
-    Criteria:
-    1. Node type is in IMAGE_WORTHY_TYPES (vector shapes)
-    2. Node name contains image-related keywords
-    3. Has actual IMAGE type fills (not just solid colors)
-    """
-    if not isinstance(node, dict):
-        return False
-    
-    # Check node type
-    node_type = (node.get("type") or "").upper()
-    type_match = node_type in IMAGE_WORTHY_TYPES
-    
-    # Check node name for image keywords
-    node_name = (node.get("name") or "").lower()
-    name_match = any(keyword in node_name for keyword in IMAGE_NAME_KEYWORDS)
-    
-    # Check if node has IMAGE fills (not just solid colors)
-    has_image_fill = False
-    fills = node.get("fills") or []
-    if isinstance(fills, list):
-        for fill in fills:
-            if isinstance(fill, dict) and fill.get("type") == "IMAGE":
-                has_image_fill = True
-                break
-    
-    # Node is image-worthy if it meets at least 2 of 3 criteria
-    # OR has an actual IMAGE fill
-    criteria_met = sum([type_match, name_match, has_image_fill])
-    return criteria_met >= 2 or has_image_fill
 
 # -----------------------------------------------------
 # UTILITY HELPERS
@@ -183,12 +207,12 @@ def is_nonempty_list(v: Any) -> bool:
     return isinstance(v, list) and len(v) > 0
 
 def is_visible(node: Dict[str, Any]) -> bool:
-    """Check if node is visible (default True if not specified)"""
+    """Check if node is visible"""
     v = node.get("visible")
     return True if v is None else bool(v)
 
 def filter_invisible_nodes(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Recursively filter out invisible nodes from tree"""
+    """Recursively filter out invisible nodes"""
     if not is_visible(node):
         return None
     
@@ -203,15 +227,45 @@ def filter_invisible_nodes(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     
     return node
 
-# -------------------------
-# FIGMA API OPERATIONS
-# -------------------------
+def is_image_worthy_node(node: Dict[str, Any]) -> bool:
+    """Determines if a node should receive image URL assignment"""
+    if not isinstance(node, dict):
+        return False
+    
+    node_type = (node.get("type") or "").upper()
+    type_match = node_type in IMAGE_WORTHY_TYPES
+    
+    node_name = (node.get("name") or "").lower()
+    name_match = any(keyword in node_name for keyword in IMAGE_NAME_KEYWORDS)
+    
+    has_image_fill = False
+    fills = node.get("fills") or []
+    if isinstance(fills, list):
+        for fill in fills:
+            if isinstance(fill, dict) and fill.get("type") == "IMAGE":
+                has_image_fill = True
+                break
+    
+    criteria_met = sum([type_match, name_match, has_image_fill])
+    return criteria_met >= 2 or has_image_fill
+
+# -----------------------------------------------------
+# FIGMA API OPERATIONS WITH RATE LIMITING
+# -----------------------------------------------------
+
+@retry_with_exponential_backoff(max_retries=MAX_RETRIES)
+def fetch_figma_api(url: str, headers: Dict[str, str], params: Dict[str, Any], timeout: int) -> requests.Response:
+    """
+    Low-level Figma API fetch with automatic retry on 429 errors.
+    This function is wrapped with exponential backoff decorator.
+    """
+    response = requests.get(url, headers=headers, params=params, timeout=timeout)
+    response.raise_for_status()
+    return response
 
 def fetch_figma_nodes(file_key: str, node_ids: str, token: str, timeout: int = 60) -> Dict[str, Any]:
     """
-    Fetch node(s) from Figma file.
-    If node_ids is empty, fetch entire file document.
-    Filters invisible nodes automatically.
+    Fetch nodes from Figma file with rate limit handling.
     """
     headers = build_headers(token)
     url = f"https://api.figma.com/v1/files/{file_key}"
@@ -222,11 +276,8 @@ def fetch_figma_nodes(file_key: str, node_ids: str, token: str, timeout: int = 6
     else:
         params = {}
     
-    response = requests.get(url, headers=headers, params=params, timeout=timeout)
-    
-    if not response.ok:
-        raise RuntimeError(f"Figma API error {response.status_code}: {response.text}")
-    
+    # Use rate-limited API call
+    response = fetch_figma_api(url, headers, params, timeout)
     data = response.json()
     
     # Filter invisible nodes
@@ -240,19 +291,12 @@ def fetch_figma_nodes(file_key: str, node_ids: str, token: str, timeout: int = 6
     
     return data
 
-# -------------------------
-# OPTIMIZED: Node Walking & Image Collection
-# -------------------------
+# -----------------------------------------------------
+# NODE WALKING & DATA COLLECTION
+# -----------------------------------------------------
 
 def walk_nodes_collect_data(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], List[str], Dict[str, Dict[str, Any]]]:
-    """
-    OPTIMIZED: Single-pass node walking that collects:
-    - image_refs: Set of image hashes/refs from IMAGE fills
-    - node_ids: List of all node IDs (for potential rendering)
-    - node_meta: Enriched metadata including is_image_worthy flag
-    
-    Returns: (image_refs, node_ids, node_meta)
-    """
+    """Single-pass node walking for data collection"""
     image_refs: Set[str] = set()
     node_ids: List[str] = []
     node_meta: Dict[str, Dict[str, Any]] = {}
@@ -263,15 +307,12 @@ def walk_nodes_collect_data(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], Li
         
         node_id = node.get("id")
         if not node_id:
-            # Skip nodes without IDs
             for child in node.get("children", []) or []:
                 visit(child)
             return
         
-        # Collect node ID
         node_ids.append(node_id)
         
-        # Build enriched metadata
         node_meta[node_id] = {
             "id": node_id,
             "name": node.get("name", ""),
@@ -281,7 +322,6 @@ def walk_nodes_collect_data(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], Li
             "first_image_ref": None
         }
         
-        # Collect image references from fills
         fills = node.get("fills") or []
         if isinstance(fills, list):
             for fill in fills:
@@ -293,7 +333,6 @@ def walk_nodes_collect_data(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], Li
                         if not node_meta[node_id]["first_image_ref"]:
                             node_meta[node_id]["first_image_ref"] = ref
         
-        # Collect image references from strokes (less common but possible)
         strokes = node.get("strokes") or []
         if isinstance(strokes, list):
             for stroke in strokes:
@@ -302,11 +341,9 @@ def walk_nodes_collect_data(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], Li
                     if ref:
                         image_refs.add(ref)
         
-        # Recurse to children
         for child in node.get("children", []) or []:
             visit(child)
     
-    # Handle different payload structures
     if isinstance(nodes_payload.get("nodes"), dict):
         for entry in nodes_payload["nodes"].values():
             doc = entry.get("document")
@@ -316,7 +353,7 @@ def walk_nodes_collect_data(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], Li
     if isinstance(nodes_payload.get("document"), dict):
         visit(nodes_payload["document"])
     
-    # Deduplicate node_ids while preserving order
+    # Deduplicate
     seen = set()
     unique_node_ids = []
     for nid in node_ids:
@@ -326,9 +363,9 @@ def walk_nodes_collect_data(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], Li
     
     return image_refs, unique_node_ids, node_meta
 
-# -------------------------
-# OPTIMIZED: Image URL Resolution
-# -------------------------
+# -----------------------------------------------------
+# IMAGE URL RESOLUTION WITH RATE LIMITING
+# -----------------------------------------------------
 
 def resolve_image_urls(
     file_key: str,
@@ -338,27 +375,23 @@ def resolve_image_urls(
     timeout: int = 60
 ) -> Tuple[Dict[str, str], Dict[str, Optional[str]]]:
     """
-    OPTIMIZED: Resolve image URLs with intelligent filtering.
-    Only fetches renders for nodes marked as image_worthy.
-    
-    Returns: (fills_map, renders_map)
+    Resolve image URLs with intelligent rate limit handling.
     """
     headers = build_headers(token)
     fills_map: Dict[str, str] = {}
     
-    # Fetch fill images (for IMAGE type fills)
+    # Fetch fill images
     if image_refs:
         try:
             fills_url = f"https://api.figma.com/v1/files/{file_key}/images"
-            # Batch all image refs in one request (Figma supports this)
-            r = requests.get(fills_url, headers=headers, timeout=timeout)
-            if r.ok:
-                fills_map = r.json().get("images", {}) or {}
+            # Use rate-limited fetch
+            response = fetch_figma_api(fills_url, headers, {}, timeout)
+            fills_map = response.json().get("images", {}) or {}
         except Exception as e:
             st.warning(f"⚠️ Could not fetch fill images: {str(e)}")
             fills_map = {}
     
-    # OPTIMIZATION: Only fetch renders for image-worthy nodes
+    # Only fetch renders for image-worthy nodes
     image_worthy_ids = [
         nid for nid, meta in node_meta.items()
         if meta.get("is_image_worthy", False)
@@ -368,22 +401,24 @@ def resolve_image_urls(
     
     if image_worthy_ids:
         base_render_url = f"https://api.figma.com/v1/images/{file_key}"
-        
-        # Batch processing with progress tracking
         total_batches = (len(image_worthy_ids) + API_BATCH_SIZE - 1) // API_BATCH_SIZE
         
         for batch_idx, batch in enumerate(chunked(image_worthy_ids, API_BATCH_SIZE)):
             try:
-                params = {"ids": ",".join(batch), "format": "svg"}
-                r = requests.get(base_render_url, headers=headers, params=params, timeout=timeout)
+                # Show progress
+                st.text(f"🖼️ Fetching image batch {batch_idx + 1}/{total_batches}...")
                 
-                if r.ok:
-                    images_map = r.json().get("images", {}) or {}
-                    renders_map.update(images_map)
-                else:
-                    # Mark failed renders as None
-                    for nid in batch:
-                        renders_map[nid] = None
+                params = {"ids": ",".join(batch), "format": "svg"}
+                
+                # Use rate-limited fetch with automatic retry
+                response = fetch_figma_api(base_render_url, headers, params, timeout)
+                images_map = response.json().get("images", {}) or {}
+                renders_map.update(images_map)
+                
+                # Small delay between batches to be API-friendly
+                if batch_idx < total_batches - 1:
+                    time.sleep(0.5)
+                    
             except Exception as e:
                 st.warning(f"⚠️ Batch {batch_idx + 1}/{total_batches} failed: {str(e)}")
                 for nid in batch:
@@ -391,57 +426,34 @@ def resolve_image_urls(
     
     return fills_map, renders_map
 
-# -------------------------
-# OPTIMIZED: Build Icon Map
-# -------------------------
-
 def build_selective_icon_map(
     node_meta: Dict[str, Dict[str, Any]],
     fills_map: Dict[str, str],
     renders_map: Dict[str, Optional[str]]
 ) -> Dict[str, str]:
-    """
-    OPTIMIZED: Build icon map only for image-worthy nodes.
-    Prioritizes IMAGE fills over rendered images.
-    
-    Returns: node_id -> url mapping
-    """
+    """Build icon map only for image-worthy nodes"""
     node_to_url: Dict[str, str] = {}
     
     for node_id, meta in node_meta.items():
-        # Skip non-image-worthy nodes
         if not meta.get("is_image_worthy", False):
             continue
         
         url = None
-        
-        # Priority 1: Use IMAGE fill if available
         first_ref = meta.get("first_image_ref")
         if first_ref:
             url = fills_map.get(first_ref)
         
-        # Priority 2: Fallback to rendered image
         if not url:
             url = renders_map.get(node_id)
         
-        # Only add if we have a valid URL
         if url:
             node_to_url[node_id] = url
     
     return node_to_url
 
-# -------------------------
-# OPTIMIZED: Merge URLs into Nodes
-# -------------------------
-
 def merge_urls_into_nodes(nodes_payload: Dict[str, Any], node_to_url: Dict[str, str]) -> Dict[str, Any]:
-    """
-    OPTIMIZED: Deep copy and inject image_url only for nodes in node_to_url.
-    Uses cached lookup for faster access.
-    """
+    """Merge URLs into nodes payload"""
     merged = copy.deepcopy(nodes_payload)
-    
-    # Cache the lookup set for O(1) access
     url_node_ids = set(node_to_url.keys())
     
     def inject(node: Dict[str, Any]):
@@ -452,11 +464,9 @@ def merge_urls_into_nodes(nodes_payload: Dict[str, Any], node_to_url: Dict[str, 
         if node_id and node_id in url_node_ids:
             node["image_url"] = node_to_url[node_id]
         
-        # Recurse to children
         for child in node.get("children", []) or []:
             inject(child)
     
-    # Handle different payload structures
     if isinstance(merged.get("nodes"), dict):
         for entry in merged["nodes"].values():
             doc = entry.get("document")
@@ -468,12 +478,11 @@ def merge_urls_into_nodes(nodes_payload: Dict[str, Any], node_to_url: Dict[str, 
     
     return merged
 
-# -------------------------
-# EXTRACTION HELPERS
-# -------------------------
+# -----------------------------------------------------
+# EXTRACTION HELPERS (keeping previous implementations)
+# -----------------------------------------------------
 
 def extract_bounds(node: Dict[str, Any]) -> Optional[Dict[str, float]]:
-    """Extract absolute bounding box coordinates"""
     box = node.get("absoluteBoundingBox")
     if isinstance(box, dict) and all(k in box for k in ("x", "y", "width", "height")):
         try:
@@ -488,7 +497,6 @@ def extract_bounds(node: Dict[str, Any]) -> Optional[Dict[str, float]]:
     return None
 
 def extract_layout(node: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract layout and auto-layout properties"""
     layout_keys = [
         'layoutMode', 'constraints', 'paddingLeft', 'paddingRight',
         'paddingTop', 'paddingBottom', 'itemSpacing', 'counterAxisAlignItems',
@@ -497,15 +505,11 @@ def extract_layout(node: Dict[str, Any]) -> Dict[str, Any]:
         'counterAxisSizingMode', 'primaryAxisSizingMode',
         'clipsContent', 'layoutWrap', 'layoutGrids'
     ]
-    
-    # OPTIMIZATION: Use dict comprehension with existence check
     return {k: node[k] for k in layout_keys if k in node}
 
 def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract visual styling: fills, strokes, effects, corners"""
     styling: Dict[str, Any] = {}
     
-    # Extract fills
     fills = node.get("fills")
     if is_nonempty_list(fills):
         parsed_fills = []
@@ -535,12 +539,10 @@ def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
         if parsed_fills:
             styling["fills"] = parsed_fills
     
-    # Extract background color
     bg_color = node.get("backgroundColor")
     if isinstance(bg_color, dict):
         styling["backgroundColor"] = to_rgba(bg_color)
     
-    # Extract strokes (borders)
     strokes = node.get("strokes")
     if is_nonempty_list(strokes):
         borders = []
@@ -571,12 +573,10 @@ def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
         if borders:
             styling["borders"] = borders
     
-    # Extract corner radius
     corner_radius = node.get("cornerRadius")
     if isinstance(corner_radius, (int, float)) and corner_radius > 0:
         styling["cornerRadius"] = corner_radius
     
-    # Extract effects (shadows, blurs)
     effects = node.get("effects")
     if is_nonempty_list(effects):
         parsed_effects = []
@@ -611,15 +611,13 @@ def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
     return styling
 
 def extract_text(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Extract text content and typography for TEXT nodes"""
     if node.get("type", "").upper() != "TEXT":
         return None
     
-    text_: Dict[str, Any] = {
+    text_ Dict[str, Any] = {
         "content": node.get("characters", "")
     }
     
-    # Extract typography from style
     style = node.get("style")
     if isinstance(style, dict):
         text_data["typography"] = {
@@ -632,7 +630,6 @@ def extract_text(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             "textCase": (style.get("textCase") or "none").lower()
         }
     
-    # Extract text color from fills
     fills = node.get("fills")
     if is_nonempty_list(fills):
         for fill in fills:
@@ -643,15 +640,12 @@ def extract_text(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     return text_data
 
 def should_include(node: Dict[str, Any]) -> bool:
-    """Determine if a node should be included in extraction"""
     node_type = node.get("type", "").upper()
     node_name = node.get("name", "").lower()
     
-    # Always include text nodes
     if node_type == "TEXT":
         return True
     
-    # Include nodes with visual properties
     has_visual = bool(
         node.get("fills") or
         node.get("strokes") or
@@ -659,7 +653,6 @@ def should_include(node: Dict[str, Any]) -> bool:
         node.get("image_url")
     )
     
-    # Include nodes with semantic names
     semantic_keywords = [
         'button', 'input', 'search', 'nav', 'menu',
         'container', 'card', 'panel', 'header', 'footer',
@@ -667,22 +660,18 @@ def should_include(node: Dict[str, Any]) -> bool:
     ]
     has_semantic_name = any(keyword in node_name for keyword in semantic_keywords)
     
-    # Include visible vector shapes
     is_vector_shape = (
         node_type in ['VECTOR', 'LINE', 'ELLIPSE', 'POLYGON', 'STAR', 'RECTANGLE'] and
         (node.get("strokes") or node.get("fills"))
     )
     
-    # Include nodes with corner radius (likely buttons/cards)
     has_corner_radius = (
         isinstance(node.get('cornerRadius'), (int, float)) and
         node.get('cornerRadius', 0) > 0
     )
     
-    # Include layout containers
     has_layout = bool(node.get('layoutMode'))
     
-    # Include structural nodes
     is_structural = node_type in [
         'FRAME', 'GROUP', 'COMPONENT', 'INSTANCE', 'SECTION'
     ]
@@ -697,37 +686,29 @@ def should_include(node: Dict[str, Any]) -> bool:
     ])
 
 def classify_bucket(comp: Dict[str, Any]) -> str:
-    """Classify component into organizational bucket"""
     comp_type = comp.get("type", "").upper()
     comp_name = comp.get("name", "").lower()
     
-    # Text elements
     if comp_type == "TEXT":
         return "textElements"
     
-    # Buttons
     if "button" in comp_name or "btn" in comp_name:
         return "buttons"
     
-    # Input fields
     input_keywords = ['input', 'search', 'textfield', 'field', 'textarea']
     if any(keyword in comp_name for keyword in input_keywords):
         return "inputs"
     
-    # Navigation elements
     nav_keywords = ['nav', 'menu', 'sidebar', 'toolbar', 'header', 'footer', 'breadcrumb', 'tab']
     if any(keyword in comp_name for keyword in nav_keywords):
         return "navigation"
     
-    # Images (has imageUrl assigned)
     if comp.get("imageUrl") or comp.get("image_url"):
         return "images"
     
-    # Vector shapes
     if comp_type in ['VECTOR', 'LINE', 'ELLIPSE', 'POLYGON', 'STAR', 'RECTANGLE']:
         return "vectors"
     
-    # Containers
     container_types = ['FRAME', 'GROUP', 'COMPONENT', 'INSTANCE', 'SECTION']
     container_keywords = ['container', 'card', 'panel', 'section', 'wrapper', 'box']
     if comp_type in container_types or any(keyword in comp_name for keyword in container_keywords):
@@ -740,21 +721,15 @@ def extract_components(
     parent_path: str = "",
     out: Optional[List[Dict[str, Any]]] = None
 ) -> List[Dict[str, Any]]:
-    """
-    Recursively extract components from node tree with full metadata.
-    OPTIMIZED: Early returns, cached name lookups
-    """
     if out is None:
         out = []
     
     if not isinstance(root, dict):
         return out
     
-    # Build hierarchical path
     node_name = root.get('name', 'Unnamed')
     path = f"{parent_path}/{node_name}" if parent_path else node_name
     
-    # Build component data
     comp: Dict[str, Any] = {
         'id': root.get('id'),
         'name': node_name,
@@ -762,36 +737,29 @@ def extract_components(
         'path': path
     }
     
-    # Add position if available
     bounds = extract_bounds(root)
     if bounds:
         comp['position'] = bounds
     
-    # Add layout properties
     layout = extract_layout(root)
     if layout:
         comp['layout'] = layout
     
-    # Add visual styling
     styling = extract_visuals(root)
     if styling:
         comp['styling'] = styling
     
-    # Add image URL if present (already filtered by is_image_worthy)
     image_url = root.get('image_url') or root.get('imageUrl')
     if image_url:
         comp['imageUrl'] = image_url
     
-    # Add text properties for TEXT nodes
     text = extract_text(root)
     if text:
         comp['text'] = text
     
-    # Include component if it meets criteria
     if should_include(root):
         out.append(comp)
     
-    # Recurse to children
     children = root.get('children', []) or []
     for child in children:
         if isinstance(child, dict):
@@ -800,10 +768,8 @@ def extract_components(
     return out
 
 def find_document_roots(nodes_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Find all document root nodes in payload"""
     roots: List[Dict[str, Any]] = []
     
-    # Check nodes structure (from /nodes endpoint)
     nodes = nodes_payload.get('nodes')
     if isinstance(nodes, dict):
         for value in nodes.values():
@@ -815,7 +781,6 @@ def find_document_roots(nodes_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
         if roots:
             return roots
     
-    # Check direct document structure (from /files endpoint)
     document = nodes_payload.get('document')
     if isinstance(document, dict):
         roots.append(document)
@@ -823,7 +788,6 @@ def find_document_roots(nodes_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
     return roots
 
 def organize_for_angular(components: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Organize extracted components into categorized structure for Angular"""
     organized = {
         'metadata': {
             'totalComponents': len(components),
@@ -840,7 +804,6 @@ def organize_for_angular(components: List[Dict[str, Any]]) -> Dict[str, Any]:
         'other': []
     }
     
-    # Classify and organize components
     for comp in components:
         bucket = classify_bucket(comp)
         organized.setdefault(bucket, []).append(comp)
@@ -848,10 +811,6 @@ def organize_for_angular(components: List[Dict[str, Any]]) -> Dict[str, Any]:
     return organized
 
 def extract_ui_components(merged_payload: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Main extraction function: converts merged payload to organized component structure.
-    OPTIMIZED: Single-pass extraction with efficient categorization
-    """
     roots = find_document_roots(merged_payload)
     
     if not roots:
@@ -859,7 +818,6 @@ def extract_ui_components(merged_payload: Dict[str, Any]) -> Dict[str, Any]:
     
     all_components: List[Dict[str, Any]] = []
     
-    # Extract from all roots
     for root in roots:
         if isinstance(root, dict):
             extract_components(root, "", all_components)
@@ -867,10 +825,6 @@ def extract_ui_components(merged_payload: Dict[str, Any]) -> Dict[str, Any]:
     return organize_for_angular(all_components)
 
 def remove_url_prefix_from_json(payload: Dict[str, Any], url_prefix: str) -> Dict[str, Any]:
-    """
-    Remove URL prefix from imageUrl/image_url values for portability.
-    OPTIMIZED: In-place processing with early continue
-    """
     processed = copy.deepcopy(payload)
     
     def strip_prefix(obj: Any):
@@ -888,36 +842,20 @@ def remove_url_prefix_from_json(payload: Dict[str, Any], url_prefix: str) -> Dic
     strip_prefix(processed)
     return processed
 
-# -------------------------
+# -----------------------------------------------------
 # ANGULAR CODE PROCESSING
-# -------------------------
+# -----------------------------------------------------
 
 def add_url_prefix_to_angular_code(text: str, url_prefix: str) -> Tuple[str, int]:
-    """
-    Find UUID-only occurrences in Angular patterns and prefix them.
-    OPTIMIZED: Compiled regex patterns for better performance
-    
-    Returns: (modified_text, total_replacements)
-    """
-    # Pre-compiled patterns for common Angular/HTML usage
     patterns = [
-        # src="UUID"
         (re.compile(r'(src\s*=\s*["\'])(' + UUID_RE + r')(["\'])', re.IGNORECASE),
          r'\1' + url_prefix + r'\2\3'),
-        
-        # [src]="'UUID'" or [src]="UUID"
         (re.compile(r'(\[src\]\s*=\s*["\']?\s*)(' + UUID_RE + r')(["\']?)', re.IGNORECASE),
          r'\1' + url_prefix + r'\2\3'),
-        
-        # imageUrl: 'UUID' or imageUrl: "UUID"
         (re.compile(r'(imageUrl\s*:\s*["\'])(' + UUID_RE + r')(["\'])', re.IGNORECASE),
          r'\1' + url_prefix + r'\2\3'),
-        
-        # url('UUID') in CSS
         (re.compile(r'(url\(\s*["\'])(' + UUID_RE + r')(["\']\s*\))', re.IGNORECASE),
          r'\1' + url_prefix + r'\2\3'),
-        
-        # Standalone quoted UUIDs (conservative pattern)
         (re.compile(r'(["\'])(' + UUID_RE + r')(["\'])', re.IGNORECASE),
          r'\1' + url_prefix + r'\2\3'),
     ]
@@ -932,10 +870,6 @@ def add_url_prefix_to_angular_code(text: str, url_prefix: str) -> Tuple[str, int
     return modified, total_replacements
 
 def create_text_to_pdf(text_content: str) -> BytesIO:
-    """
-    Convert text to PDF with monospace formatting.
-    OPTIMIZED: Chunked processing for large files
-    """
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -962,10 +896,8 @@ def create_text_to_pdf(text_content: str) -> BytesIO:
     lines = text_content.splitlines()
     chunk_size = 60
     
-    # Process in chunks to avoid memory issues
     for i in range(0, len(lines), chunk_size):
         chunk_lines = lines[i:i+chunk_size]
-        # Escape XML characters
         safe_lines = [
             line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
             for line in chunk_lines
@@ -977,14 +909,9 @@ def create_text_to_pdf(text_content: str) -> BytesIO:
     return buffer
 
 def detect_uuids_in_text(text: str) -> List[str]:
-    """
-    Extract unique UUIDs from text (order-preserving).
-    OPTIMIZED: Single regex pass with set-based deduplication
-    """
     pattern = re.compile(UUID_RE, re.IGNORECASE)
     found = pattern.findall(text)
     
-    # Deduplicate while preserving order
     seen = set()
     unique = []
     for uuid in found:
@@ -995,35 +922,31 @@ def detect_uuids_in_text(text: str) -> List[str]:
     return unique
 
 def decode_bytes_to_text(raw: bytes) -> str:
-    """Safely decode bytes to text with fallback encodings"""
     for encoding in ['utf-8', 'latin-1', 'cp1252']:
         try:
             return raw.decode(encoding)
         except UnicodeDecodeError:
             continue
     
-    # Final fallback with error ignoring
     return raw.decode('utf-8', errors='ignore')
 
-# -------------------------
+# -----------------------------------------------------
 # STREAMLIT UI
-# -------------------------
+# -----------------------------------------------------
 
 def main():
-    # Header
     st.markdown("""
     <div style='text-align: center; padding: 1rem 0 2rem 0;'>
         <h1 style='margin-bottom: 0.5rem;'>🎨 Figma UI Extractor</h1>
         <p style='font-size: 1.05rem; color: #6B7280; font-weight: 500;'>
-            Enterprise-Grade UI Component Extraction & Angular Code Processing
+            Enterprise-Grade UI Component Extraction with Rate Limit Protection
         </p>
         <p style='font-size: 0.9rem; color: #9CA3AF;'>
-            ⚡ Optimized for Selective Image Extraction
+            ⚡ Auto-retry • Exponential Backoff • Smart Throttling
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Sidebar
     with st.sidebar:
         st.markdown("### ⚙️ System Information")
         st.markdown("---")
@@ -1038,33 +961,36 @@ def main():
             st.metric("Downloads", st.session_state['stats']['downloads'])
 
         st.markdown("---")
+        st.markdown("### 🛡️ Rate Limit Protection")
+        st.success(f"""
+        **Active Features:**
+        - Max Retries: {MAX_RETRIES}
+        - Initial Delay: {INITIAL_RETRY_DELAY}s
+        - Max Delay: {MAX_RETRY_DELAY}s
+        - Jitter: {JITTER_MAX}s
+        """)
+        
+        st.markdown("---")
         st.markdown("### 🎯 Extraction Criteria")
         st.info("""
         **Images extracted only from:**
-        - Vector/shape layers (rectangles, circles, etc.)
-        - Nodes with names like: icon, logo, avatar, image
-        - Layers with actual IMAGE fills
+        - Vector/shape layers
+        - Names: icon, logo, avatar, image
+        - Layers with IMAGE fills
         """)
         
         st.markdown("---")
         st.markdown("### 📚 Resources")
         st.markdown("""
-        - [Figma API Docs](https://www.figma.com/developers/api)
+        - [Figma API Rate Limits](https://developers.figma.com/docs/rest-api/rate-limits/)
         - [Angular Framework](https://angular.io)
-        - [ReportLab](https://www.reportlab.com)
         """)
-        
-        st.markdown("---")
-        st.markdown("### 🔐 Security")
-        st.info("API tokens are used only for fetching and are not persisted.")
 
-    # Tabs
     tab1, tab2 = st.tabs(["🎯 Figma Extraction", "⚡ Angular Processor"])
 
-    # --- TAB 1: Figma Extraction ---
     with tab1:
         st.markdown("### Figma Component Extraction")
-        st.markdown("Extract UI components with intelligent image filtering and complete metadata from Figma.")
+        st.markdown("Extract UI components with automatic rate limit handling and intelligent retries.")
         st.markdown("---")
 
         col1, col2 = st.columns(2)
@@ -1084,7 +1010,7 @@ def main():
         token = st.text_input(
             "🔑 Figma Personal Access Token",
             type="password",
-            help="Generate in Figma account settings → Personal Access Tokens"
+            help="Generate in Figma account settings"
         )
 
         if st.button("🚀 Extract UI Components", type="primary"):
@@ -1095,7 +1021,6 @@ def main():
                     progress = st.progress(0)
                     status = st.empty()
 
-                    # Step 1: Fetch nodes
                     status.text("📡 Fetching nodes from Figma API...")
                     progress.progress(10)
                     nodes_payload = fetch_figma_nodes(
@@ -1104,41 +1029,34 @@ def main():
                         token=token
                     )
 
-                    # Step 2: Walk and collect data (OPTIMIZED: single pass)
                     status.text("🔍 Analyzing nodes and collecting metadata...")
                     progress.progress(30)
                     image_refs, node_id_list, node_meta = walk_nodes_collect_data(nodes_payload)
                     
-                    # Display analysis stats
                     total_nodes = len(node_meta)
                     image_worthy_count = sum(1 for m in node_meta.values() if m.get('is_image_worthy'))
                     status.text(f"📊 Found {total_nodes} nodes ({image_worthy_count} image-worthy)")
 
-                    # Step 3: Resolve image URLs (OPTIMIZED: only for image-worthy nodes)
-                    status.text("🖼️ Resolving image URLs (selective)...")
+                    status.text("🖼️ Resolving image URLs (with rate limit protection)...")
                     progress.progress(55)
                     fills_map, renders_map = resolve_image_urls(
                         file_key, image_refs, node_meta, token
                     )
 
-                    # Step 4: Build icon map (OPTIMIZED: filtered)
                     status.text("🎨 Building selective icon map...")
                     progress.progress(75)
                     node_to_url = build_selective_icon_map(node_meta, fills_map, renders_map)
                     
                     status.text(f"✨ Assigned {len(node_to_url)} image URLs")
 
-                    # Step 5: Merge URLs into payload
                     status.text("📦 Merging URLs into node tree...")
                     progress.progress(85)
                     merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
 
-                    # Step 6: Extract structured components
                     status.text("🏗️ Extracting structured components...")
                     progress.progress(92)
                     final_output = extract_ui_components(merged_payload)
 
-                    # Step 7: Sanitize URLs for portability
                     status.text("🧹 Sanitizing URLs for portability...")
                     progress.progress(98)
                     sanitized = remove_url_prefix_from_json(
@@ -1146,7 +1064,6 @@ def main():
                         DEFAULT_IMAGE_PREFIX
                     )
                     
-                    # Store in session state
                     st.session_state['metadata_json'] = sanitized
                     st.session_state['extraction_stats'] = {
                         'total_nodes': total_nodes,
@@ -1160,7 +1077,6 @@ def main():
                     
                     st.success("✅ Extraction completed successfully!")
 
-                    # Display metrics
                     st.markdown("### 📊 Extraction Summary")
                     
                     col1, col2, col3, col4 = st.columns(4)
@@ -1173,7 +1089,6 @@ def main():
                     with col4:
                         st.metric("Containers", len(sanitized.get('containers', [])))
 
-                    # Category breakdown
                     with st.expander("📋 Detailed Category Breakdown"):
                         categories = [
                             ('textElements', 'Text Elements'),
@@ -1191,7 +1106,6 @@ def main():
                             if count > 0:
                                 st.markdown(f"**{label}:** `{count}` components")
                     
-                    # Optimization stats
                     with st.expander("⚡ Optimization Stats"):
                         stats = st.session_state.get('extraction_stats', {})
                         st.markdown(f"""
@@ -1207,7 +1121,6 @@ def main():
                     with st.expander("🔍 Error Details"):
                         st.code(traceback.format_exc())
 
-        # Download section
         if 'metadata_json' in st.session_state:
             st.markdown("---")
             st.markdown("### 💾 Download Extracted Data")
@@ -1232,16 +1145,15 @@ def main():
             with col2:
                 st.caption(f"Size: {len(json_str):,} bytes")
 
-    # --- TAB 2: Angular Processor ---
     with tab2:
         st.markdown("### Angular Code Image URL Processor")
-        st.markdown("Automatically prefix UUID-based image identifiers with complete URLs in your Angular code.")
+        st.markdown("Automatically prefix UUID-based image identifiers with complete URLs.")
         st.markdown("---")
 
         url_prefix = st.text_input(
             "🌐 URL Prefix",
             value=DEFAULT_IMAGE_PREFIX,
-            help="This prefix will be added to all detected image UUIDs in your code"
+            help="This prefix will be added to all detected image UUIDs"
         )
 
         uploaded = st.file_uploader(
@@ -1255,20 +1167,16 @@ def main():
 
             if st.button("⚡ Process Angular Code", type="primary"):
                 try:
-                    # Read and decode file
                     raw_bytes = uploaded.read()
                     text_content = decode_bytes_to_text(raw_bytes)
                     
-                    # Detect UUIDs before processing
                     uuids_found = detect_uuids_in_text(text_content)
                     
-                    # Process and add prefixes
                     modified_text, replacements_made = add_url_prefix_to_angular_code(
                         text_content,
                         url_prefix
                     )
                     
-                    # Store results
                     st.session_state['angular_output'] = modified_text
                     st.session_state['angular_filename'] = uploaded.name
                     st.session_state['angular_stats'] = {
@@ -1280,7 +1188,6 @@ def main():
                     
                     st.success("✅ Angular code processed successfully!")
 
-                    # Processing summary
                     st.markdown("### 📊 Processing Summary")
                     
                     col1, col2, col3 = st.columns(3)
@@ -1291,7 +1198,6 @@ def main():
                     with col3:
                         st.metric("Output Size", f"{len(modified_text):,} bytes")
 
-                    # Sample transformation
                     if len(uuids_found) > 0:
                         with st.expander("🔍 Sample Transformation"):
                             sample_uuid = uuids_found[0]
@@ -1300,7 +1206,6 @@ def main():
                             st.markdown("**After:**")
                             st.code(f"{url_prefix}{sample_uuid}", language="text")
                     
-                    # All UUIDs found
                     if len(uuids_found) > 0:
                         with st.expander(f"📝 All UUIDs Found ({len(uuids_found)})"):
                             for idx, uuid in enumerate(uuids_found[:20], 1):
@@ -1314,7 +1219,6 @@ def main():
                     with st.expander("🔍 Error Details"):
                         st.code(traceback.format_exc())
 
-        # Download processed code
         if 'angular_output' in st.session_state:
             st.markdown("---")
             st.markdown("### 💾 Download Processed Code")
@@ -1358,15 +1262,14 @@ def main():
                     })
                 )
 
-    # Footer
     st.markdown("---")
     st.markdown("""
     <div style='text-align: center; padding: 1.5rem 0; color: #6B7280;'>
         <p style='margin: 0; font-size: 0.9rem;'>
-            Built with ❤️ using <strong>Streamlit</strong> | Professional Edition v2.0 (Optimized)
+            Built with ❤️ using <strong>Streamlit</strong> | Professional Edition v3.0 (Rate-Limit Protected)
         </p>
         <p style='margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #9CA3AF;'>
-            ⚡ Selective image extraction • Enhanced performance • Smart filtering
+            🛡️ Auto-retry • Exponential backoff • Smart throttling • Selective extraction
         </p>
     </div>
     """, unsafe_allow_html=True)
