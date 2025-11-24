@@ -731,10 +731,10 @@ def main():
             with col2:
                 st.caption(f"Size: {len(json_str):,} bytes")
 
-    # --- Angular Processor Tab ---
+    # --- Angular Processor Tab (upload or paste) ---
     with tab2:
         st.markdown("### Angular Code Image URL Processor")
-        st.markdown("Automatically prefix UUID-based image identifiers with complete URLs in your code.")
+        st.markdown("Upload a file or paste code, then automatically prefix UUID image IDs with a full URL.")
         st.markdown("---")
 
         url_prefix = st.text_input(
@@ -743,26 +743,50 @@ def main():
             help="This prefix will be added to all detected image UUIDs"
         )
 
-        uploaded = st.file_uploader(
-            "📤 Upload Angular Code File",
-            type=['txt', 'md', 'html', 'ts', 'js', 'pdf'],
-            help="Supported formats: .txt, .md, .html, .ts, .js, .pdf"
+        st.markdown("#### 📥 Choose Input Method")
+        input_method = st.radio(
+            "Select how you want to provide your code:",
+            options=["📤 Upload File", "📝 Paste Code"],
+            horizontal=True,
+            label_visibility="collapsed"
         )
 
-        if uploaded:
-            st.info(f"✅ File uploaded: **{uploaded.name}**")
+        code_text = ""
+        source_filename = "code"
 
-            if st.button("⚡ Process Angular Code"):
+        if input_method == "📤 Upload File":
+            uploaded = st.file_uploader(
+                "📤 Upload Angular Code File",
+                type=['txt', 'md', 'html', 'ts', 'js', 'css', 'scss', 'json'],
+                help="Supported formats: .txt, .md, .html, .ts, .js, .css, .scss, .json"
+            )
+
+            if uploaded:
+                st.info(f"✅ File uploaded: **{uploaded.name}**")
                 try:
                     raw = uploaded.read()
-                    text = decode_bytes_to_text(raw)
-                    if uploaded.name.lower().endswith('.pdf'):
-                        st.warning("⚠️ PDF->text extraction is basic; results may vary.")
-                    uuids = detect_uuids_in_text(text)
-                    modified, replaced = add_url_prefix_to_angular_code(text, url_prefix)
+                    code_text = decode_bytes_to_text(raw)
+                    source_filename = uploaded.name.rsplit('.', 1)[0] if '.' in uploaded.name else uploaded.name
+                except Exception as e:
+                    st.error(f"❌ Error reading file: {str(e)}")
+        else:
+            code_text = st.text_area(
+                "📝 Paste Your Angular Code Here",
+                height=320,
+                placeholder="Paste your TypeScript / HTML / CSS code here...",
+                help="Once you paste code here, the Process button will be enabled below."
+            )
+            source_filename = "pasted_code"
+
+        # Show Process button only when there is some code (paste-detected or file content)
+        if code_text and code_text.strip():
+            if st.button("⚡ Process Angular Code", type="primary"):
+                try:
+                    uuids = detect_uuids_in_text(code_text)
+                    modified, replaced = add_url_prefix_to_angular_code(code_text, url_prefix)
 
                     st.session_state['angular_output'] = modified
-                    st.session_state['angular_filename'] = uploaded.name
+                    st.session_state['angular_filename'] = source_filename
                     st.session_state['stats']['files_processed'] += 1
 
                     st.success("✅ Angular code processed successfully!")
@@ -783,39 +807,68 @@ def main():
                             st.code(f"Before: {sample}", language="text")
                             st.code(f"After: {url_prefix}{sample}", language="text")
                 except Exception as e:
-                    st.error(f"❌ Error processing file: {str(e)}")
+                    st.error(f"❌ Error processing code: {str(e)}")
+        else:
+            st.info("Paste some code or upload a file to enable the processor.")
 
         # Downloads for angular output
         if 'angular_output' in st.session_state:
             st.markdown("---")
-            st.markdown("### 💾 Download Processed Code")
-            base = st.session_state['angular_filename'].rsplit('.', 1)[0]
+            st.markdown("### 💾 Download / Copy Processed Code")
+            base = st.session_state['angular_filename']
+            if '.' in base:
+                base = base.rsplit('.', 1)[0]
 
-            col1, col2, col3 = st.columns(3)
+            # Pretty code block for direct copy (indentation preserved)
+            st.markdown("#### 💻 View & Copy Code")
+            st.code(st.session_state['angular_output'], language="typescript")
+
+            with st.expander("📋 Raw Output (select & copy)", expanded=False):
+                st.text_area(
+                    "Processed Code",
+                    value=st.session_state['angular_output'],
+                    height=380,
+                    label_visibility="collapsed",
+                    help="Select all and copy from here; indentation is preserved."
+                )
+
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.download_button(
-                    "📄 Download as .txt",
+                    "📄 .txt",
                     data=st.session_state['angular_output'],
                     file_name=f"{base}_modified.txt",
                     mime="text/plain",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
                 )
             with col2:
                 st.download_button(
-                    "📝 Download as .md",
+                    "📝 .md",
                     data=st.session_state['angular_output'],
                     file_name=f"{base}_modified.md",
                     mime="text/markdown",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
                 )
             with col3:
+                st.download_button(
+                    "💻 .ts",
+                    data=st.session_state['angular_output'],
+                    file_name=f"{base}_modified.ts",
+                    mime="text/typescript",
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
+                )
+            with col4:
                 pdf_buf = create_text_to_pdf(st.session_state['angular_output'])
                 st.download_button(
-                    "📕 Download as .pdf",
+                    "📕 .pdf",
                     data=pdf_buf,
                     file_name=f"{base}_modified.pdf",
                     mime="application/pdf",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
                 )
 
     # Footer
