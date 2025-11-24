@@ -153,7 +153,7 @@ def is_icon_or_symbol(node: Dict[str, Any]) -> bool:
     
     return False
 
-def collect_icon_nodes( Dict[str, Any]) -> List[Dict[str, Any]]:
+def collect_icon_nodes(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Walk tree and collect only icon/symbol/logo nodes with minimal metadata"""
     icons: List[Dict[str, Any]] = []
     
@@ -452,7 +452,7 @@ def main():
                     with st.expander("👀 Preview Icons"):
                         icons = final_output.get('icons', [])[:10]  # Show first 10
                         for icon in icons:
-                            st.markdown(f"**{icon['name']}** ({icon['type']}) - `{icon['size']}`")
+                            st.markdown(f"**{icon['name']}** ({icon['type']}) - `{icon.get('size')}`")
                             st.markdown(f"🔗 {icon['url'][:80]}...")
                             st.markdown("---")
 
