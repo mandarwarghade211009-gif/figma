@@ -936,6 +936,18 @@ def decode_bytes_to_text(raw: bytes) -> str:
             return raw.decode('utf-8', errors='ignore')
 
 # -------------------------
+# GITHUB ZIP DOWNLOAD HELPER
+# -------------------------
+
+@st.cache_data(ttl=3600)
+def fetch_github_zip(url: str) -> bytes:
+    """Fetch zip file from GitHub with caching"""
+    response = requests.get(url, timeout=30)
+    if response.status_code == 200:
+        return response.content
+    raise RuntimeError(f"Failed to fetch from GitHub: {response.status_code}")
+
+# -------------------------
 # STREAMLIT UI + WORKFLOW
 # -------------------------
 
@@ -969,30 +981,28 @@ def main():
 
         st.markdown("---")
         
-        # Angular 19 Boilerplate Download Section
+        # Angular 19 Boilerplate Download Section - Updated with GitHub URL
         st.markdown("### 📦 Angular Boilerplate")
         st.markdown("Download the Angular 19 skeleton/boilerplate code to get started quickly.")
         
-        # Check if angular19.zip exists in the current directory
-        angular_zip_path = "angular19.zip"
-        if os.path.exists(angular_zip_path):
-            try:
-                with open(angular_zip_path, "rb") as file:
-                    angular_zip_bytes = file.read()
-                
-                st.download_button(
-                    label="📥 Download Angular 19 Boilerplate",
-                    data=angular_zip_bytes,
-                    file_name="angular19.zip",
-                    mime="application/zip",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-                st.caption(f"Size: {len(angular_zip_bytes):,} bytes")
-            except Exception as e:
-                st.warning(f"⚠️ Could not load Angular boilerplate: {str(e)}")
-        else:
-            st.info("📁 Place `angular19.zip` in the same directory to enable download.")
+        github_zip_url = "https://raw.githubusercontent.com/mandarwarghade211009-gif/figma/main/skeleton%20angular%2019.zip"
+        
+        try:
+            angular_zip_bytes = fetch_github_zip(github_zip_url)
+            
+            st.download_button(
+                label="📥 Download Angular 19 Boilerplate",
+                data=angular_zip_bytes,
+                file_name="angular19_skeleton.zip",
+                mime="application/zip",
+                on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                use_container_width=True
+            )
+            st.caption(f"Size: {len(angular_zip_bytes):,} bytes")
+            
+        except Exception as e:
+            st.error(f"❌ Error downloading from GitHub: {str(e)}")
+            st.info("💡 Check your internet connection or verify the GitHub URL is accessible.")
         
         st.markdown("---")
         st.markdown("### 📚 Resources")
@@ -1075,218 +1085,220 @@ def main():
 
                     # Enhanced metrics display
                     st.markdown("### 📊 Extraction Summary")
+                    
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("Total Components", sanitized['metadata']['totalComponents'], delta="All nodes")
+                        st.metric("Total Components", sanitized['metadata']['totalComponents'])
                     with col2:
-                        st.metric("Text Elements", len(sanitized.get('textElements', [])), delta="Typography")
+                        st.metric("Text Elements", len(sanitized.get('textElements', [])))
                     with col3:
-                        st.metric("Buttons", len(sanitized.get('buttons', [])), delta="Interactive")
+                        st.metric("Buttons", len(sanitized.get('buttons', [])))
                     with col4:
-                        st.metric("Containers", len(sanitized.get('containers', [])), delta="Layout")
+                        st.metric("Containers", len(sanitized.get('containers', [])))
 
-                    with st.expander("📋 Detailed Category Breakdown", expanded=False):
-                        categories = {
-                            'textElements': '📝 Text Elements',
-                            'buttons': '🔘 Buttons',
-                            'inputs': '📥 Input Fields',
-                            'containers': '📦 Containers',
-                            'images': '🖼️ Images',
-                            'navigation': '🧭 Navigation',
-                            'vectors': '✏️ Vector Graphics',
-                            'other': '📌 Other Components'
-                        }
-                        
-                        for cat_key, cat_label in categories.items():
-                            count = len(sanitized.get(cat_key, []))
-                            if count > 0:
-                                st.markdown(f"- **{cat_label}**: `{count}` components")
-                except Exception as e:
-                    st.error(f"❌ Extraction failed: {str(e)}")
-                    st.info("💡 Please verify your file key and access token, then try again.")
-
-        # Downloads for extraction
-        if 'metadata_json' in st.session_state:
-            st.markdown("---")
-            st.markdown("### 💾 Download Extracted Data")
-            json_str = json.dumps(st.session_state['metadata_json'], indent=2, ensure_ascii=False)
-
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.download_button(
-                    "📥 Download metadata.json",
-                    data=json_str,
-                    file_name="metadata.json",
-                    mime="application/json",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col2:
-                st.caption(f"**Size:** {len(json_str):,} bytes")
-            
-            st.info("📌 This JSON file contains all extracted UI components with styling, layout, and image references.")
-
-    # --- Angular Processor Tab (upload or paste) ---
-    with tab2:
-        st.markdown("### ⚡ Angular Code Image URL Processor")
-        st.markdown("Upload Angular code files or paste code snippets, then automatically prefix UUID image identifiers with full Figma CDN URLs.")
-        st.markdown("---")
-
-        url_prefix = st.text_input(
-            "🌐 Image URL Prefix",
-            value="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/",
-            help="This prefix will be automatically added to all detected UUID image identifiers in your code"
-        )
-
-        st.markdown("#### 📥 Select Input Method")
-        input_method = st.radio(
-            "Choose how you want to provide your Angular code:",
-            options=["📤 Upload File", "📝 Paste Code"],
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-
-        code_text = ""
-        source_filename = "code"
-
-        if input_method == "📤 Upload File":
-            uploaded = st.file_uploader(
-                "📤 Upload Angular/TypeScript Code File",
-                type=['txt', 'md', 'html', 'ts', 'js', 'css', 'scss', 'json'],
-                help="Supported file types: .txt, .md, .html, .ts, .js, .css, .scss, .json"
-            )
-
-            if uploaded:
-                st.success(f"✅ File uploaded successfully: **{uploaded.name}**")
-                try:
-                    raw = uploaded.read()
-                    code_text = decode_bytes_to_text(raw)
-                    source_filename = uploaded.name.rsplit('.', 1)[0] if '.' in uploaded.name else uploaded.name
-                except Exception as e:
-                    st.error(f"❌ Error reading file: {str(e)}")
-        else:
-            code_text = st.text_area(
-                "📝 Paste Your Angular/TypeScript Code",
-                height=360,
-                placeholder="Paste your TypeScript, HTML, CSS, or SCSS code here...\n\nExample:\n<img src=\"a1b2c3d4-e5f6-7890-abcd-ef1234567890\" />\n\nThis will be converted to:\n<img src=\"https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/a1b2c3d4-e5f6-7890-abcd-ef1234567890\" />",
-                help="Paste your code and click 'Process Angular Code' to automatically prefix all UUID image references"
-            )
-            source_filename = "pasted_code"
-
-        st.markdown("")
-        
-        # Show Process button only when there is some code (paste-detected or file content)
-        if code_text and code_text.strip():
-            if st.button("⚡ Process Angular Code", type="primary", use_container_width=True):
-                try:
-                    uuids = detect_uuids_in_text(code_text)
-                    modified, replaced = add_url_prefix_to_angular_code(code_text, url_prefix)
-
-                    st.session_state['angular_output'] = modified
-                    st.session_state['angular_filename'] = source_filename
-                    st.session_state['stats']['files_processed'] += 1
-
-                    st.success("✅ Angular code processed successfully! All UUID image references have been updated.")
-
-                    # Enhanced processing metrics
-                    st.markdown("### 📊 Processing Summary")
-                    col1, col2, col3 = st.columns(3)
+                    st.markdown("---")
+                    
+                    # Component breakdown
+                    st.markdown("### 📋 Component Breakdown")
+                    
+                    categories = {
+                        'Text Elements': len(sanitized.get('textElements', [])),
+                        'Buttons': len(sanitized.get('buttons', [])),
+                        'Inputs': len(sanitized.get('inputs', [])),
+                        'Containers': len(sanitized.get('containers', [])),
+                        'Images': len(sanitized.get('images', [])),
+                        'Navigation': len(sanitized.get('navigation', [])),
+                        'Vectors': len(sanitized.get('vectors', [])),
+                        'Other': len(sanitized.get('other', []))
+                    }
+                    
+                    for category, count in categories.items():
+                        if count > 0:
+                            st.write(f"**{category}:** {count}")
+                    
+                    st.markdown("---")
+                    
+                    # Download options
+                    st.markdown("### 💾 Download Options")
+                    
+                    col1, col2 = st.columns(2)
+                    
                     with col1:
-                        st.metric("Image IDs Found", len(uuids), delta="UUIDs detected")
+                        json_str = json.dumps(sanitized, indent=2)
+                        st.download_button(
+                            label="📥 Download JSON",
+                            data=json_str,
+                            file_name=f"figma_ui_components_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                            mime="application/json",
+                            use_container_width=True
+                        )
+                    
                     with col2:
-                        st.metric("Replacements Made", replaced, delta="URLs updated")
-                    with col3:
-                        st.metric("Output Size", f"{len(modified):,} bytes", delta="Characters")
+                        pdf_buffer = create_text_to_pdf(json_str)
+                        st.download_button(
+                            label="📥 Download PDF",
+                            data=pdf_buffer,
+                            file_name=f"figma_ui_components_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    
+                    # Preview
+                    with st.expander("🔍 Preview JSON Data", expanded=False):
+                        st.json(sanitized)
 
-                    if len(uuids) > 0:
-                        with st.expander("🔍 Sample Transformation Preview", expanded=True):
-                            sample = uuids[0]
-                            st.markdown("**Before Processing:**")
-                            st.code(f"{sample}", language="text")
-                            st.markdown("**After Processing:**")
-                            st.code(f"{url_prefix}{sample}", language="text")
-                            st.info(f"💡 {replaced} total replacements applied across your code.")
                 except Exception as e:
-                    st.error(f"❌ Processing failed: {str(e)}")
-        else:
-            st.info("📝 Please paste some code or upload a file to enable the Angular code processor.")
+                    st.error(f"❌ An error occurred: {str(e)}")
+                    st.info("💡 Please verify your Figma file key, node IDs, and API token are correct.")
 
-        # Downloads for angular output
-        if 'angular_output' in st.session_state:
-            st.markdown("---")
-            st.markdown("### 💾 Download / Copy Processed Code")
-            base = st.session_state['angular_filename']
-            if '.' in base:
-                base = base.rsplit('.', 1)[0]
-
-            # Pretty code block for direct copy (indentation preserved)
-            st.markdown("#### 💻 View & Copy Processed Code")
-            st.code(st.session_state['angular_output'], language="typescript")
-
-            with st.expander("📋 Raw Text Output (Select All & Copy)", expanded=False):
-                st.text_area(
-                    "Processed Code - Raw Text",
-                    value=st.session_state['angular_output'],
-                    height=400,
-                    label_visibility="collapsed",
-                    help="Select all text (Ctrl+A / Cmd+A) and copy (Ctrl+C / Cmd+C) — formatting and indentation are preserved"
-                )
-
-            st.markdown("#### 📥 Download in Multiple Formats")
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.download_button(
-                    "📄 Text (.txt)",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.txt",
-                    mime="text/plain",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col2:
-                st.download_button(
-                    "📝 Markdown (.md)",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.md",
-                    mime="text/markdown",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col3:
-                st.download_button(
-                    "💻 TypeScript (.ts)",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.ts",
-                    mime="text/typescript",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col4:
-                pdf_buf = create_text_to_pdf(st.session_state['angular_output'])
-                st.download_button(
-                    "📕 PDF (.pdf)",
-                    data=pdf_buf,
-                    file_name=f"{base}_modified.pdf",
-                    mime="application/pdf",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
+    # --- Angular Processor Tab ---
+    with tab2:
+        st.markdown("### ⚡ Angular Code Processor")
+        st.markdown("Process Angular files by adding URL prefixes to image references (UUIDs) for proper asset loading.")
+        st.markdown("---")
+        
+        url_prefix = st.text_input(
+            "🔗 URL Prefix",
+            value="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/",
+            help="Enter the base URL to prepend to all UUID image references",
+            placeholder="https://your-cdn.com/images/"
+        )
+        
+        st.markdown("### 📤 Upload Angular Files")
+        uploaded_files = st.file_uploader(
+            "Choose Angular files (.ts, .html, .css, .scss)",
+            type=['ts', 'html', 'css', 'scss'],
+            accept_multiple_files=True,
+            help="Upload one or more Angular component files to process"
+        )
+        
+        if uploaded_files:
+            st.markdown(f"### 📁 Uploaded Files: {len(uploaded_files)}")
             
-            st.caption("💡 Choose your preferred format for download. All formats preserve the processed code with updated image URLs.")
-
-    # Enhanced Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style='text-align: center; padding: 2rem 0 1rem 0;'>
-        <p style='margin: 0; font-size: 1rem; color: #475569; font-weight: 500;'>
-            Built with ❤️ using <strong>Streamlit</strong> | Professional Edition v2.0
-        </p>
-        <p style='margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #64748b;'>
-            Empowering developers with enterprise-grade tools for modern UI workflows
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
+            if st.button("🔄 Process Files", type="primary", use_container_width=True):
+                processed_files = []
+                total_replacements = 0
+                
+                progress = st.progress(0)
+                status = st.empty()
+                
+                for idx, uploaded_file in enumerate(uploaded_files):
+                    status.info(f"Processing {uploaded_file.name}...")
+                    progress.progress((idx + 1) / len(uploaded_files))
+                    
+                    try:
+                        file_content = decode_bytes_to_text(uploaded_file.read())
+                        modified_content, replacements = add_url_prefix_to_angular_code(file_content, url_prefix)
+                        total_replacements += replacements
+                        
+                        processed_files.append({
+                            'name': uploaded_file.name,
+                            'original': file_content,
+                            'modified': modified_content,
+                            'replacements': replacements
+                        })
+                    except Exception as e:
+                        st.warning(f"⚠️ Error processing {uploaded_file.name}: {str(e)}")
+                
+                progress.progress(1.0)
+                status.empty()
+                
+                st.success(f"✅ Processing complete! Made {total_replacements} replacements across {len(processed_files)} files.")
+                
+                # Summary
+                st.markdown("### 📊 Processing Summary")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Files Processed", len(processed_files))
+                with col2:
+                    st.metric("Total Replacements", total_replacements)
+                with col3:
+                    avg_replacements = total_replacements / len(processed_files) if processed_files else 0
+                    st.metric("Avg per File", f"{avg_replacements:.1f}")
+                
+                st.markdown("---")
+                
+                # Individual file results
+                st.markdown("### 📋 File Details")
+                
+                for pf in processed_files:
+                    with st.expander(f"📄 {pf['name']} - {pf['replacements']} replacements"):
+                        
+                        tab_orig, tab_mod, tab_diff = st.tabs(["Original", "Modified", "Changes"])
+                        
+                        with tab_orig:
+                            st.code(pf['original'], language='typescript' if pf['name'].endswith('.ts') else 'html')
+                        
+                        with tab_mod:
+                            st.code(pf['modified'], language='typescript' if pf['name'].endswith('.ts') else 'html')
+                        
+                        with tab_diff:
+                            st.info(f"Made {pf['replacements']} UUID prefix replacements")
+                            
+                            # Show UUIDs found
+                            uuids_found = detect_uuids_in_text(pf['original'])
+                            if uuids_found:
+                                st.markdown("**UUIDs Found:**")
+                                for uuid in uuids_found:
+                                    st.code(f"{uuid} → {url_prefix}{uuid}")
+                        
+                        # Download individual file
+                        st.download_button(
+                            label=f"📥 Download {pf['name']}",
+                            data=pf['modified'],
+                            file_name=f"processed_{pf['name']}",
+                            mime="text/plain",
+                            key=f"download_{pf['name']}",
+                            use_container_width=True
+                        )
+                
+                st.markdown("---")
+                
+                # Download all as PDF
+                st.markdown("### 💾 Bulk Download")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Combine all modified files
+                    combined_text = "\n\n" + "="*80 + "\n\n".join([
+                        f"FILE: {pf['name']}\n{'='*80}\n\n{pf['modified']}"
+                        for pf in processed_files
+                    ])
+                    
+                    st.download_button(
+                        label="📥 Download All (TXT)",
+                        data=combined_text,
+                        file_name=f"angular_processed_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain",
+                        use_container_width=True
+                    )
+                
+                with col2:
+                    pdf_buffer = create_text_to_pdf(combined_text)
+                    st.download_button(
+                        label="📥 Download All (PDF)",
+                        data=pdf_buffer,
+                        file_name=f"angular_processed_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+        
+        else:
+            st.info("👆 Upload Angular files above to begin processing")
+            
+            st.markdown("---")
+            st.markdown("### 💡 How It Works")
+            st.markdown("""
+            This tool automatically:
+            1. Detects UUID patterns in your Angular code (e.g., `abc123...`)
+            2. Prepends your specified URL prefix to make them valid URLs
+            3. Works with common patterns: `src="UUID"`, `[src]="'UUID'"`, `imageUrl: 'UUID'`, etc.
+            4. Preserves all other code intact
+            
+            **Supported file types:** TypeScript (.ts), HTML, CSS, SCSS
+            """)
 
 if __name__ == "__main__":
     main()
