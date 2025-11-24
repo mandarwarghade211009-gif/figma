@@ -19,12 +19,89 @@ import copy
 import os
 
 # -----------------------------------------------------
+# SMART IMAGEURL FILTER CONFIGURATION
+# -----------------------------------------------------
+# The category and keyword lists used for strict icon/logo detection
+logo_keywords = ['logo', 'brand', 'company', 'trademark', 'wellsky']
+icon_keywords = [
+    'icon', 'glyph', 'symbol', 'badge', 'avatar', 'star', 'check', 'arrow',
+    'menu', 'hamburger', 'close', 'search', 'notification', 'bell', 'user',
+    'profile', 'gift', 'question', 'help', 'caret', 'dropdown', 'expand'
+]
+icon_fonts = ['Font Awesome', 'Material Icons', 'Ionicons', 'Glyphicons', 'IcoFont', 
+              'Material Design Icons', 'Feather', 'Heroicons']
+
+# Size thresholds for filtering decorative images
+MIN_ICON_SIZE = 8  # pixels
+MAX_ICON_SIZE = 128  # pixels
+MIN_LOGO_SIZE = 16
+MAX_LOGO_SIZE = 256
+
+# -----------------------------------------------------
 # PROFESSIONAL THEMING
 # -----------------------------------------------------
 def apply_professional_styling():
     st.markdown("""
     <style>
-    /* fonts, colors, page theme, etc. */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .stButton>button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    
+    .stTextInput>div>div>input, .stSelectbox>div>div>select {
+        border-radius: 6px;
+        border: 2px solid #E5E7EB;
+        padding: 0.625rem;
+    }
+    
+    .stTextInput>div>div>input:focus, .stSelectbox>div>div>select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stMetric {
+        background: #F9FAFB;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+    }
+    
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px 8px 0 0;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+    }
+    
+    hr {
+        margin: 2rem 0;
+        border: none;
+        border-top: 2px solid #E5E7EB;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -97,17 +174,30 @@ def fetch_figma_nodes(file_key: str, node_ids: str, token: str, timeout: int = 6
             data["document"] = filter_invisible_nodes(data["document"])
     return data
 
-def walk_nodes_collect_images_and_ids(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], List[str], Dict[str, Dict[str, str]]]:
+def walk_nodes_collect_images_and_ids(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], List[str], Dict[str, Dict[str, Any]]]:
     image_refs: Set[str] = set()
     node_ids: List[str] = []
-    node_meta: Dict[str, Dict[str, str]] = {}
+    node_meta: Dict[str, Dict[str, Any]] = {}
+    
     def visit(n: Dict[str, Any]):
         if not isinstance(n, dict):
             return
         nid = n.get("id")
         if nid:
             node_ids.append(nid)
-            node_meta[nid] = {"id": nid, "name": n.get("name", ""), "type": n.get("type", "")}
+            # Extract comprehensive metadata for filtering
+            meta = {
+                "id": nid,
+                "name": n.get("name", ""),
+                "type": n.get("type", ""),
+                "absoluteBoundingBox": n.get("absoluteBoundingBox", {}),
+                "fills": n.get("fills", []),
+                "strokes": n.get("strokes", []),
+                "characters": n.get("characters", ""),
+                "style": n.get("style", {})
+            }
+            node_meta[nid] = meta
+        
         for f in n.get("fills", []) or []:
             if isinstance(f, dict) and f.get("type") == "IMAGE":
                 ref = f.get("imageRef") or f.get("imageHash")
@@ -120,6 +210,7 @@ def walk_nodes_collect_images_and_ids(nodes_payload: Dict[str, Any]) -> Tuple[Se
                     image_refs.add(ref)
         for c in n.get("children", []) or []:
             visit(c)
+    
     if isinstance(nodes_payload.get("nodes"), dict):
         for entry in nodes_payload["nodes"].values():
             doc = entry.get("document")
@@ -127,6 +218,7 @@ def walk_nodes_collect_images_and_ids(nodes_payload: Dict[str, Any]) -> Tuple[Se
                 visit(doc)
     if isinstance(nodes_payload.get("document"), dict):
         visit(nodes_payload["document"])
+    
     seen = set()
     unique_node_ids = []
     for nid in node_ids:
@@ -148,6 +240,7 @@ def resolve_image_urls(file_key: str, image_refs: Set[str], node_ids: List[str],
             fills_map = r.json().get("images", {}) or {}
     except Exception:
         fills_map = {}
+    
     renders_map: Dict[str, Optional[str]] = {}
     if node_ids:
         base_render = f"https://api.figma.com/v1/images/{file_key}"
@@ -167,8 +260,66 @@ def resolve_image_urls(file_key: str, image_refs: Set[str], node_ids: List[str],
                     renders_map[nid] = None
     return {k: v for k, v in fills_map.items() if k in image_refs}, renders_map
 
-def build_icon_map(nodes_payload: Dict[str, Any], filtered_fills: Dict[str, str], renders_map: Dict[str, Optional[str]], node_meta: Dict[str, Dict[str, str]]) -> Dict[str, str]:
+def is_icon_or_logo_node(meta: Dict[str, Any]) -> bool:
+    """
+    Determine if a node is an icon or logo based on comprehensive metadata analysis[web:4][web:8]
+    """
+    name = meta.get("name", "").lower()
+    node_type = meta.get("type", "").upper()
+    
+    # Check name-based keywords
+    is_logo = any(keyword in name for keyword in logo_keywords)
+    is_icon = any(keyword in name for keyword in icon_keywords)
+    
+    # Check size constraints
+    bbox = meta.get("absoluteBoundingBox", {})
+    if isinstance(bbox, dict) and "width" in bbox and "height" in bbox:
+        width = bbox.get("width", 0)
+        height = bbox.get("height", 0)
+        
+        # Icon size check
+        is_icon_sized = (MIN_ICON_SIZE <= width <= MAX_ICON_SIZE and 
+                        MIN_ICON_SIZE <= height <= MAX_ICON_SIZE)
+        
+        # Logo size check
+        is_logo_sized = (MIN_LOGO_SIZE <= width <= MAX_LOGO_SIZE and 
+                        MIN_LOGO_SIZE <= height <= MAX_LOGO_SIZE)
+    else:
+        is_icon_sized = False
+        is_logo_sized = False
+    
+    # Check if it's a text element with icon font
+    if node_type == "TEXT":
+        style = meta.get("style", {})
+        font_family = style.get("fontFamily", "")
+        is_icon_font = any(icon_font in font_family for icon_font in icon_fonts)
+        
+        characters = meta.get("characters", "")
+        is_short_text = len(characters.strip()) <= 3
+        
+        return is_icon_font or (is_short_text and is_icon)
+    
+    # Check if node has image fills (actual images, not decorative backgrounds)
+    fills = meta.get("fills", [])
+    has_image_fill = any(f.get("type") == "IMAGE" for f in fills if isinstance(f, dict))
+    
+    # Final decision logic
+    if is_logo and is_logo_sized:
+        return True
+    if is_icon and (is_icon_sized or has_image_fill):
+        return True
+    if node_type in ["VECTOR", "GROUP", "COMPONENT", "INSTANCE"] and (is_icon or is_logo):
+        return True
+    
+    return False
+
+def build_icon_map(nodes_payload: Dict[str, Any], filtered_fills: Dict[str, str], 
+                   renders_map: Dict[str, Optional[str]], node_meta: Dict[str, Dict[str, Any]]) -> Dict[str, str]:
+    """
+    Build icon map with strict filtering based on metadata analysis
+    """
     node_first_ref: Dict[str, str] = {}
+    
     def map_first_image(n: Dict[str, Any]):
         if not isinstance(n, dict):
             return
@@ -182,6 +333,7 @@ def build_icon_map(nodes_payload: Dict[str, Any], filtered_fills: Dict[str, str]
                         break
         for c in n.get("children", []) or []:
             map_first_image(c)
+    
     if isinstance(nodes_payload.get("nodes"), dict):
         for entry in nodes_payload["nodes"].values():
             doc = entry.get("document")
@@ -189,8 +341,13 @@ def build_icon_map(nodes_payload: Dict[str, Any], filtered_fills: Dict[str, str]
                 map_first_image(doc)
     if isinstance(nodes_payload.get("document"), dict):
         map_first_image(nodes_payload["document"])
+    
     node_to_url: Dict[str, str] = {}
-    for nid in node_meta.keys():
+    for nid, meta in node_meta.items():
+        # Only include imageUrl if node passes strict icon/logo filter
+        if not is_icon_or_logo_node(meta):
+            continue
+            
         url = None
         ref = node_first_ref.get(nid)
         if ref:
@@ -199,6 +356,7 @@ def build_icon_map(nodes_payload: Dict[str, Any], filtered_fills: Dict[str, str]
             url = renders_map.get(nid) or None
         if url:
             node_to_url[nid] = url
+    
     return node_to_url
 
 def merge_urls_into_nodes(nodes_payload: Dict[str, Any], node_to_url: Dict[str, str]) -> Dict[str, Any]:
@@ -211,6 +369,7 @@ def merge_urls_into_nodes(nodes_payload: Dict[str, Any], node_to_url: Dict[str, 
             n["image_url"] = node_to_url[nid]
         for c in n.get("children", []) or []:
             inject(c)
+    
     if isinstance(merged.get("nodes"), dict):
         for entry in merged["nodes"].values():
             doc = entry.get("document")
@@ -271,8 +430,10 @@ def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
                 parsed.append(entry)
         if parsed:
             styling["fills"] = parsed
+    
     if "backgroundColor" in node and isinstance(node["backgroundColor"], dict):
         styling["backgroundColor"] = to_rgba(node["backgroundColor"])
+    
     strokes = node.get("strokes")
     if is_nonempty_list(strokes):
         borders: List[Dict[str, Any]] = []
@@ -292,8 +453,10 @@ def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
                 borders.append(b)
         if borders:
             styling["borders"] = borders
+    
     if isinstance(node.get("cornerRadius"), (int, float)) and node.get("cornerRadius", 0) > 0:
         styling["cornerRadius"] = node.get("cornerRadius")
+    
     effects = node.get("effects")
     if is_nonempty_list(effects):
         parsed: List[Dict[str, Any]] = []
@@ -380,26 +543,34 @@ def extract_components(root: Dict[str, Any], parent_path: str = "", out: Optiona
         out = []
     if root is None or not isinstance(root, dict):
         return out
+    
     path = f"{parent_path}/{root.get('name','Unnamed')}" if parent_path else (root.get('name') or 'Root')
     comp: Dict[str, Any] = {'id': root.get('id'), 'name': root.get('name'), 'type': root.get('type'), 'path': path}
+    
     bounds = extract_bounds(root)
     if bounds:
         comp['position'] = bounds
+    
     layout = extract_layout(root)
     if layout:
         comp['layout'] = layout
+    
     styling = extract_visuals(root)
     if styling:
         comp['styling'] = styling
+    
     if root.get('image_url'):
         comp['imageUrl'] = root.get('image_url')
     if root.get('imageUrl'):
         comp['imageUrl'] = root.get('imageUrl')
+    
     text = extract_text(root)
     if text:
         comp['text'] = text
+    
     if should_include(root):
         out.append(comp)
+    
     for child in root.get('children', []) or []:
         if isinstance(child, dict):
             extract_components(child, path, out)
@@ -420,7 +591,22 @@ def find_document_roots(nodes_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 def organize_for_angular(components: List[Dict[str, Any]]) -> Dict[str, Any]:
     organized = {
-        'metadata': {'totalComponents': len(components), 'extractedAt': datetime.datetime.utcnow().isoformat() + 'Z', 'version': 1},
+        'metadata': {
+            'totalComponents': len(components), 
+            'extractedAt': datetime.datetime.utcnow().isoformat() + 'Z', 
+            'version': 1,
+            'filteringApplied': {
+                'iconKeywords': icon_keywords,
+                'logoKeywords': logo_keywords,
+                'iconFonts': icon_fonts,
+                'sizeThresholds': {
+                    'minIconSize': MIN_ICON_SIZE,
+                    'maxIconSize': MAX_ICON_SIZE,
+                    'minLogoSize': MIN_LOGO_SIZE,
+                    'maxLogoSize': MAX_LOGO_SIZE
+                }
+            }
+        },
         'textElements': [], 'buttons': [], 'inputs': [], 'containers': [],
         'images': [], 'navigation': [], 'vectors': [], 'other': []
     }
@@ -428,71 +614,10 @@ def organize_for_angular(components: List[Dict[str, Any]]) -> Dict[str, Any]:
         organized.setdefault(classify_bucket(c), []).append(c)
     return organized
 
-# -----------------------
-# SMART IMAGEURL OPTIMIZATION
-# -----------------------
-def should_keep_imageurl(element: Dict[str, Any], category: str) -> bool:
-    if category == 'images':
-        return True
-    if category == 'buttons':
-        return True
-    if category == 'textElements':
-        text_content = element.get('text', {}).get('content', '')
-        font_family = element.get('text', {}).get('typography', {}).get('fontFamily', '')
-        is_icon_font = any(icon_font in font_family for icon_font in [
-            'Font Awesome', 'Material Icons', 'Ionicons', 'Glyphicons', 'IcoFont', 
-            'Material Design Icons', 'Feather', 'Heroicons'
-        ])
-        is_short = len(text_content.strip()) <= 3
-        name = element.get('name', '').lower()
-        is_icon_name = any(keyword in name for keyword in ['icon', 'glyph', 'symbol'])
-        return is_icon_font or (is_short and is_icon_name)
-    if category == 'navigation':
-        name = element.get('name', '').lower()
-        return any(keyword in name for keyword in ['logo', 'icon', 'badge', 'avatar', 'brand'])
-    if category == 'containers':
-        styling = element.get('styling', {})
-        fills = styling.get('fills', [])
-        return any(f.get('type') == 'image' for f in fills if isinstance(f, dict))
-    return False
-
-def optimize_imageurl_data(organized: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    optimized = copy.deepcopy(organized)
-    stats = {
-        'total_before': 0,
-        'total_after': 0,
-        'removed_by_category': {},
-        'kept_categories': {}
-    }
-    for category in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
-        if category not in optimized:
-            continue
-        removed_count = 0
-        kept_count = 0
-        for element in optimized[category]:
-            if 'imageUrl' in element:
-                stats['total_before'] += 1
-                if not should_keep_imageurl(element, category):
-                    del element['imageUrl']
-                    removed_count += 1
-                else:
-                    stats['total_after'] += 1
-                    kept_count += 1
-        if removed_count > 0:
-            stats['removed_by_category'][category] = removed_count
-        if kept_count > 0:
-            stats['kept_categories'][category] = kept_count
-    if 'metadata' in optimized:
-        optimized['metadata']['imageUrlOptimization'] = {
-            'optimized': True,
-            'totalBefore': stats['total_before'],
-            'totalAfter': stats['total_after'],
-            'removed': stats['total_before'] - stats['total_after'],
-            'reductionPercent': round(((stats['total_before'] - stats['total_after']) / stats['total_before'] * 100), 1) if stats['total_before'] > 0 else 0
-        }
-    return optimized, stats
-
-def extract_ui_components(merged_payload: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def extract_ui_components(merged_payload: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract UI components with metadata-based imageURL optimization already applied
+    """
     roots = find_document_roots(merged_payload)
     if not roots:
         raise RuntimeError("No document roots found in payload")
@@ -501,8 +626,24 @@ def extract_ui_components(merged_payload: Dict[str, Any]) -> Tuple[Dict[str, Any
         if isinstance(r, dict):
             extract_components(r, "", all_components)
     organized = organize_for_angular(all_components)
-    optimized, stats = optimize_imageurl_data(organized)
-    return optimized, stats
+    
+    # Calculate statistics
+    total_with_imageurl = sum(1 for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']
+                              for elem in organized.get(cat, []) if 'imageUrl' in elem)
+    
+    stats_by_category = {}
+    for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
+        count = sum(1 for elem in organized.get(cat, []) if 'imageUrl' in elem)
+        if count > 0:
+            stats_by_category[cat] = count
+    
+    organized['metadata']['imageUrlStats'] = {
+        'totalIncluded': total_with_imageurl,
+        'byCategory': stats_by_category,
+        'optimizationStrategy': 'metadata-based filtering with size and keyword analysis'
+    }
+    
+    return organized
 
 # -----------------------------------------------------
 # STREAMLIT UI + WORKFLOW
@@ -512,10 +653,11 @@ def main():
     <div style='text-align: center; padding: 1rem 0 2rem 0;'>
         <h1 style='margin-bottom: 0.5rem;'>🎨 Figma UI Extractor</h1>
         <p style='font-size: 1.05rem; color: #6B7280; font-weight: 500;'>
-            Enterprise-Grade UI Component Extraction & Angular Code Processing
+            Enterprise-Grade UI Component Extraction with Smart ImageURL Optimization
         </p>
     </div>
     """, unsafe_allow_html=True)
+    
     with st.sidebar:
         st.markdown("### ⚙️ System Information")
         st.markdown("---")
@@ -526,6 +668,14 @@ def main():
             st.metric("Files Processed", st.session_state['stats']['files_processed'])
         with col2:
             st.metric("Downloads", st.session_state['stats']['downloads'])
+        
+        st.markdown("---")
+        st.markdown("### 🎯 Filter Configuration")
+        st.markdown(f"**Icon Size:** {MIN_ICON_SIZE}-{MAX_ICON_SIZE}px")
+        st.markdown(f"**Logo Size:** {MIN_LOGO_SIZE}-{MAX_LOGO_SIZE}px")
+        st.markdown(f"**Icon Keywords:** {len(icon_keywords)}")
+        st.markdown(f"**Logo Keywords:** {len(logo_keywords)}")
+        
         st.markdown("---")
         st.markdown("### 📚 Resources")
         st.markdown("""
@@ -538,15 +688,18 @@ def main():
         st.info("API tokens are used only for fetching and are not persisted.")
 
     tab1, tab2 = st.tabs(["🎯 Figma Extraction", "⚡ Angular Processor"])
+    
     with tab1:
         st.markdown("### Figma Component Extraction")
-        st.markdown("Extract UI components with **smart imageURL optimization** for Angular agents.")
+        st.markdown("Extract UI components with **metadata-based imageURL optimization** for Angular agents.")
         st.markdown("---")
+        
         col1, col2 = st.columns(2)
         with col1:
             file_key = st.text_input("📁 Figma File Key", value="", help="Figma file key (from file URL)")
         with col2:
             node_ids = st.text_input("🔗 Node IDs (comma-separated)", value="", help="Optional: comma-separated node ids")
+        
         token = st.text_input("🔑 Figma Personal Access Token", type="password", help="Generate in Figma account settings")
 
         if st.button("🚀 Extract UI Components"):
@@ -556,29 +709,38 @@ def main():
                 try:
                     progress = st.progress(0)
                     status = st.empty()
+                    
                     status.text("📡 Fetching nodes from Figma API...")
                     progress.progress(5)
                     nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
-                    status.text("🖼️ Collecting images and node metadata...")
+                    
+                    status.text("🖼️ Collecting images and comprehensive node metadata...")
                     progress.progress(25)
                     image_refs, node_id_list, node_meta = walk_nodes_collect_images_and_ids(nodes_payload)
+                    
                     status.text("🔗 Resolving image URLs from Figma...")
                     progress.progress(50)
                     filtered_fills, renders_map = resolve_image_urls(file_key, image_refs, node_id_list, token)
-                    status.text("🎨 Building icon map and merging URLs into nodes...")
+                    
+                    status.text("🎨 Applying metadata-based filtering and building icon map...")
                     progress.progress(70)
                     node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
+                    
                     merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
-                    status.text("📦 Extracting structured components with optimization...")
+                    
+                    status.text("📦 Extracting structured components...")
                     progress.progress(85)
-                    final_output, optimization_stats = extract_ui_components(merged_payload)
+                    final_output = extract_ui_components(merged_payload)
+                    
                     status.text("✨ Finalizing extraction...")
                     progress.progress(95)
+                    
                     st.session_state['metadata_json'] = final_output
-                    st.session_state['optimization_stats'] = optimization_stats
                     st.session_state['stats']['files_processed'] += 1
+                    
                     progress.progress(100)
-                    st.success("✅ Extraction completed with smart optimization!")
+                    st.success("✅ Extraction completed with metadata-based optimization!")
+                    
                     st.markdown("### 📊 Extraction Summary")
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
@@ -589,24 +751,31 @@ def main():
                         st.metric("Buttons", len(final_output.get('buttons', [])))
                     with col4:
                         st.metric("Containers", len(final_output.get('containers', [])))
-                    if optimization_stats['total_before'] > 0:
-                        st.markdown("### 🎯 ImageURL Optimization")
-                        col1, col2, col3 = st.columns(3)
+                    
+                    img_stats = final_output['metadata'].get('imageUrlStats', {})
+                    if img_stats.get('totalIncluded', 0) > 0:
+                        st.markdown("### 🎯 ImageURL Optimization Results")
+                        col1, col2 = st.columns(2)
                         with col1:
-                            st.metric("Before", optimization_stats['total_before'])
+                            st.metric("Total imageUrls Included", img_stats['totalIncluded'])
                         with col2:
-                            st.metric("After", optimization_stats['total_after'])
-                        with col3:
-                            reduction = optimization_stats['total_before'] - optimization_stats['total_after']
-                            st.metric("Removed", reduction, delta=f"-{round(reduction / optimization_stats['total_before'] * 100, 1)}%")
-                    with st.expander("📋 Category Breakdown"):
+                            st.info("✨ Only icons, logos, and semantic images included")
+                        
+                        with st.expander("📋 ImageURL Distribution by Category"):
+                            for cat, count in img_stats.get('byCategory', {}).items():
+                                st.markdown(f"- **{cat}**: `{count}` imageUrls")
+                    
+                    with st.expander("📋 Full Category Breakdown"):
                         for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
-                            count = len(final_output.get(cat, []))
-                            if count > 0:
-                                kept = optimization_stats['kept_categories'].get(cat, 0)
-                                st.markdown(f"- **{cat}**: `{count}` components, `{kept}` with imageUrl")
+                            total_count = len(final_output.get(cat, []))
+                            img_count = sum(1 for elem in final_output.get(cat, []) if 'imageUrl' in elem)
+                            if total_count > 0:
+                                st.markdown(f"- **{cat}**: `{total_count}` components, `{img_count}` with imageUrl")
+                
                 except Exception as e:
                     st.error(f"❌ Error during extraction: {str(e)}")
+                    import traceback
+                    st.code(traceback.format_exc())
 
         if 'metadata_json' in st.session_state:
             st.markdown("---")
@@ -628,16 +797,19 @@ def main():
         st.markdown("### Angular Code Image URL Processor")
         st.markdown("Automatically prefix UUID-based image identifiers with complete URLs in your code.")
         st.markdown("---")
+        
         url_prefix = st.text_input(
             "🌐 URL Prefix",
             value="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/",
             help="This prefix will be added to all detected image UUIDs"
         )
+        
         uploaded = st.file_uploader(
             "📤 Upload Angular Code File",
             type=['txt', 'md', 'html', 'ts', 'js', 'pdf'],
             help="Supported formats: .txt, .md, .html, .ts, .js, .pdf"
         )
+        
         def decode_bytes_to_text(raw: bytes) -> str:
             try:
                 return raw.decode('utf-8')
@@ -646,15 +818,17 @@ def main():
                     return raw.decode('latin-1')
                 except Exception:
                     return raw.decode('utf-8', errors='ignore')
+        
         UUID_RE = r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
+        
         def add_url_prefix_to_angular_code(text: str, url_prefix: str) -> Tuple[str, int]:
             import re
             patterns = [
-                (re.compile(r'(src\\s*=\\s*[\\"\\\'])(%s)([\\"\\\'])' % UUID_RE, re.IGNORECASE), r'\\1' + url_prefix + r'\\2\\3'),
-                (re.compile(r'(\\[src\\]\\s*=\\s*[\\"\\\']\\s*)(%s)([\\"\\\'])' % UUID_RE, re.IGNORECASE), r'\\1' + url_prefix + r'\\2\\3'),
-                (re.compile(r'(imageUrl\\s*:\\s*[\\"\\\'])(%s)([\\"\\\'])' % UUID_RE, re.IGNORECASE), r'\\1' + url_prefix + r'\\2\\3'),
-                (re.compile(r'(url\\(\\s*[\\"\\\'])(%s)([\\"\\\']\\s*\\))' % UUID_RE, re.IGNORECASE), r'\\1' + url_prefix + r'\\2\\3'),
-                (re.compile(r'([\\"\\\'])(%s)([\\"\\\'])' % UUID_RE, re.IGNORECASE), r'\\1' + url_prefix + r'\\2\\3'),
+                (re.compile(r'(src\s*=\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+                (re.compile(r'(\[src\]\s*=\s*["\\']\s*)(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+                (re.compile(r'(imageUrl\s*:\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+                (re.compile(r'(url\(\s*["\'])(%s)(["\\']\s*\))' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+                (re.compile(r'(["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
             ]
             modified = text
             total_replacements = 0
@@ -662,6 +836,7 @@ def main():
                 modified, n = pat.subn(repl, modified)
                 total_replacements += n
             return modified, total_replacements
+        
         if uploaded:
             st.info(f"✅ File uploaded: **{uploaded.name}**")
             if st.button("⚡ Process Angular Code"):
@@ -670,13 +845,18 @@ def main():
                     text = decode_bytes_to_text(raw)
                     if uploaded.name.lower().endswith('.pdf'):
                         st.warning("⚠️ PDF->text extraction is basic; results may vary.")
+                    
                     pattern = re.compile(UUID_RE, re.IGNORECASE)
                     uuids = pattern.findall(text)
+                    
                     modified, replaced = add_url_prefix_to_angular_code(text, url_prefix)
+                    
                     st.session_state['angular_output'] = modified
                     st.session_state['angular_filename'] = uploaded.name
                     st.session_state['stats']['files_processed'] += 1
+                    
                     st.success("✅ Angular code processed successfully!")
+                    
                     st.markdown("### 📊 Processing Summary")
                     col1, col2, col3 = st.columns(3)
                     with col1:
@@ -685,13 +865,16 @@ def main():
                         st.metric("Replacements Made", replaced)
                     with col3:
                         st.metric("Output Size", f"{len(modified):,} bytes")
+                    
                     if len(uuids) > 0:
                         with st.expander("🔍 Sample Transformation"):
                             sample = uuids[0]
                             st.code(f"Before: {sample}", language="text")
                             st.code(f"After: {url_prefix}{sample}", language="text")
+                
                 except Exception as e:
                     st.error(f"❌ Error processing file: {str(e)}")
+        
         if 'angular_output' in st.session_state:
             st.markdown("---")
             st.markdown("### 💾 Download Processed Code")
@@ -713,8 +896,6 @@ def main():
                     mime="text/markdown",
                     on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
                 )
-            with col3:
-                pass  # PDF version can be added if needed
 
 if __name__ == "__main__":
     main()
