@@ -615,7 +615,7 @@ def extract_text(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if node.get("type", "").upper() != "TEXT":
         return None
     
-    text_ Dict[str, Any] = {
+    text_: Dict[str, Any] = {
         "content": node.get("characters", "")
     }
     
