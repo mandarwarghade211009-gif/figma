@@ -21,11 +21,677 @@ import copy
 # PROFESSIONAL THEMING
 # -----------------------------------------------------
 def apply_professional_styling():
-    """Apply professional, government-style CSS theme"""
+    """Apply professional, modern enterprise CSS theme with 2025 design trends"""
     st.markdown("""
     <style>
-    /* fonts, colors, page theme… (YOUR ORIGINAL STYLING HERE) */
-    /* I am keeping this unchanged */
+    /* =====================================================
+       PROFESSIONAL ENTERPRISE THEME 2025
+       Modern, Clean, and Highly Attractive Design System
+    ===================================================== */
+    
+    /* Import Professional Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    
+    /* ==================== ROOT VARIABLES ==================== */
+    :root {
+        /* Primary Brand Colors - Modern Blue Palette */
+        --primary-blue: #2563EB;
+        --primary-blue-dark: #1E40AF;
+        --primary-blue-light: #3B82F6;
+        --accent-cyan: #06B6D4;
+        --accent-orange: #F97316;
+        
+        /* Neutral Grays - Professional Palette */
+        --gray-50: #F9FAFB;
+        --gray-100: #F3F4F6;
+        --gray-200: #E5E7EB;
+        --gray-300: #D1D5DB;
+        --gray-400: #9CA3AF;
+        --gray-500: #6B7280;
+        --gray-600: #4B5563;
+        --gray-700: #374151;
+        --gray-800: #1F2937;
+        --gray-900: #111827;
+        
+        /* Semantic Colors */
+        --success: #10B981;
+        --success-light: #D1FAE5;
+        --warning: #F59E0B;
+        --warning-light: #FEF3C7;
+        --error: #EF4444;
+        --error-light: #FEE2E2;
+        --info: #3B82F6;
+        --info-light: #DBEAFE;
+        
+        /* Background Gradients */
+        --bg-gradient-primary: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+        --bg-gradient-secondary: linear-gradient(135deg, #F093FB 0%, #F5576C 100%);
+        --bg-gradient-success: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%);
+        --bg-gradient-warm: linear-gradient(135deg, #FA709A 0%, #FEE140 100%);
+        --bg-gradient-cool: linear-gradient(135deg, #30CFD0 0%, #330867 100%);
+        
+        /* Shadows - Professional Depth */
+        --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.3);
+        
+        /* Border Radius */
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-xl: 1rem;
+        --radius-2xl: 1.5rem;
+        --radius-full: 9999px;
+        
+        /* Transitions */
+        --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* ==================== BASE STYLES ==================== */
+    .stApp {
+        background: linear-gradient(to bottom right, #F9FAFB 0%, #EFF6FF 50%, #F0F9FF 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    /* Main Content Container */
+    .main .block-container {
+        padding: 2rem 3rem 3rem 3rem;
+        max-width: 1400px;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: var(--radius-2xl);
+        box-shadow: var(--shadow-xl);
+        margin: 1.5rem auto;
+    }
+    
+    /* ==================== TYPOGRAPHY ==================== */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--gray-900);
+    }
+    
+    h1 {
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+    
+    h2 {
+        font-size: 1.75rem;
+        color: var(--gray-800);
+        border-bottom: 3px solid var(--primary-blue);
+        padding-bottom: 0.75rem;
+        margin: 2rem 0 1.5rem 0;
+        position: relative;
+    }
+    
+    h2::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--accent-cyan);
+        border-radius: var(--radius-full);
+    }
+    
+    h3 {
+        font-size: 1.35rem;
+        color: var(--gray-700);
+        font-weight: 600;
+        margin: 1.5rem 0 1rem 0;
+    }
+    
+    p, li, span {
+        color: var(--gray-600);
+        line-height: 1.7;
+        font-size: 0.975rem;
+    }
+    
+    code {
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+        background: var(--gray-100);
+        padding: 0.2rem 0.5rem;
+        border-radius: var(--radius-sm);
+        color: var(--primary-blue-dark);
+        font-size: 0.875rem;
+        border: 1px solid var(--gray-200);
+    }
+    
+    /* ==================== SIDEBAR STYLING ==================== */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: var(--shadow-2xl);
+    }
+    
+    [data-testid="stSidebar"] * {
+        color: #E2E8F0 !important;
+    }
+    
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: #FFFFFF !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    [data-testid="stSidebar"] .stMarkdown {
+        padding: 0.5rem 0;
+    }
+    
+    [data-testid="stSidebar"] hr {
+        border-color: rgba(255, 255, 255, 0.15);
+        margin: 1.5rem 0;
+    }
+    
+    /* Sidebar Links */
+    [data-testid="stSidebar"] a {
+        color: #60A5FA !important;
+        text-decoration: none;
+        transition: var(--transition-base);
+        font-weight: 500;
+    }
+    
+    [data-testid="stSidebar"] a:hover {
+        color: #93C5FD !important;
+        text-decoration: underline;
+    }
+    
+    /* ==================== BUTTONS ==================== */
+    .stButton > button {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        box-shadow: var(--shadow-lg);
+        transition: all var(--transition-base);
+        text-transform: none;
+        letter-spacing: 0.01em;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stButton > button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: var(--transition-slow);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl), var(--shadow-glow);
+    }
+    
+    .stButton > button:hover::before {
+        left: 100%;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* ==================== INPUTS ==================== */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 0.75rem 1rem;
+        font-size: 0.975rem;
+        transition: all var(--transition-base);
+        background: white;
+        color: var(--gray-800);
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+    
+    /* Input Labels */
+    .stTextInput > label,
+    .stTextArea > label,
+    .stSelectbox > label,
+    .stFileUploader > label {
+        color: var(--gray-700);
+        font-weight: 600;
+        font-size: 0.925rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* ==================== TABS ==================== */
+    .stTabs {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-lg);
+        margin: 2rem 0;
+    }
+    
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.5rem;
+        background: var(--gray-50);
+        padding: 0.5rem;
+        border-radius: var(--radius-lg);
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: var(--radius-md);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        color: var(--gray-600);
+        transition: all var(--transition-base);
+        border: none;
+        background: transparent;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: white;
+        color: var(--primary-blue);
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%) !important;
+        color: white !important;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .stTabs [data-baseweb="tab-panel"] {
+        padding: 2rem 0.5rem 0.5rem 0.5rem;
+    }
+    
+    /* ==================== METRICS ==================== */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-blue-dark);
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: var(--gray-600);
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    [data-testid="stMetric"] {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+        padding: 1.5rem;
+        border-radius: var(--radius-xl);
+        border: 2px solid var(--gray-100);
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-base);
+    }
+    
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary-blue);
+    }
+    
+    /* ==================== PROGRESS BAR ==================== */
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, var(--primary-blue) 0%, var(--accent-cyan) 100%);
+        border-radius: var(--radius-full);
+        height: 12px;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .stProgress > div > div {
+        background: var(--gray-200);
+        border-radius: var(--radius-full);
+        height: 12px;
+    }
+    
+    /* ==================== ALERTS & MESSAGES ==================== */
+    .stSuccess {
+        background: linear-gradient(135deg, var(--success-light) 0%, #ECFDF5 100%);
+        border-left: 4px solid var(--success);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.5rem;
+        color: #065F46;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .stInfo {
+        background: linear-gradient(135deg, var(--info-light) 0%, #EFF6FF 100%);
+        border-left: 4px solid var(--info);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.5rem;
+        color: #1E40AF;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .stWarning {
+        background: linear-gradient(135deg, var(--warning-light) 0%, #FFFBEB 100%);
+        border-left: 4px solid var(--warning);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.5rem;
+        color: #92400E;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .stError {
+        background: linear-gradient(135deg, var(--error-light) 0%, #FEF2F2 100%);
+        border-left: 4px solid var(--error);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.5rem;
+        color: #991B1B;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* ==================== EXPANDER ==================== */
+    .streamlit-expanderHeader {
+        background: linear-gradient(135deg, #FFFFFF 0%, var(--gray-50) 100%);
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        transition: all var(--transition-base);
+    }
+    
+    .streamlit-expanderHeader:hover {
+        border-color: var(--primary-blue);
+        background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .streamlit-expanderContent {
+        border: 2px solid var(--gray-200);
+        border-top: none;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        padding: 1.5rem;
+        background: white;
+    }
+    
+    /* ==================== FILE UPLOADER ==================== */
+    [data-testid="stFileUploader"] {
+        background: linear-gradient(135deg, #FFFFFF 0%, var(--gray-50) 100%);
+        border: 2px dashed var(--gray-300);
+        border-radius: var(--radius-xl);
+        padding: 2rem;
+        transition: all var(--transition-base);
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: var(--primary-blue);
+        background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* ==================== DOWNLOAD BUTTON ==================== */
+    .stDownloadButton > button {
+        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: 0.65rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.925rem;
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-base);
+    }
+    
+    .stDownloadButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* ==================== COLUMNS ==================== */
+    [data-testid="column"] {
+        padding: 0.5rem;
+    }
+    
+    /* ==================== DATAFRAME ==================== */
+    .dataframe {
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .dataframe thead {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+        color: white;
+    }
+    
+    .dataframe tbody tr:nth-child(even) {
+        background: var(--gray-50);
+    }
+    
+    .dataframe tbody tr:hover {
+        background: var(--info-light);
+        transition: var(--transition-fast);
+    }
+    
+    /* ==================== DIVIDER ==================== */
+    hr {
+        border: none;
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, var(--gray-300) 50%, transparent 100%);
+        margin: 2rem 0;
+    }
+    
+    /* ==================== CODE BLOCKS ==================== */
+    .stCodeBlock {
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+    }
+    
+    /* ==================== SELECTBOX ==================== */
+    .stSelectbox > div > div {
+        border-radius: var(--radius-lg);
+        border: 2px solid var(--gray-200);
+        transition: all var(--transition-base);
+    }
+    
+    .stSelectbox > div > div:focus-within {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    /* ==================== RADIO BUTTONS ==================== */
+    .stRadio > div {
+        background: linear-gradient(135deg, #FFFFFF 0%, var(--gray-50) 100%);
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.5rem;
+    }
+    
+    .stRadio > div > label {
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+    
+    /* ==================== CODE OUTPUT BOX ==================== */
+    .code-output-box {
+        background: #1E293B;
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        border: 2px solid var(--gray-700);
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        margin: 1.5rem 0;
+    }
+    
+    .code-output-box pre {
+        margin: 0;
+        color: #E2E8F0;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    .copy-button-container {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+    }
+    
+    /* ==================== CUSTOM UTILITY CLASSES ==================== */
+    .gradient-text {
+        background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 2rem;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--gray-100);
+        transition: all var(--transition-base);
+    }
+    
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-2xl);
+    }
+    
+    /* ==================== ANIMATIONS ==================== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
+    }
+    
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+    
+    /* Apply fade-in animation to main content */
+    .main .block-container {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    /* ==================== RESPONSIVE DESIGN ==================== */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding: 1rem;
+            margin: 0.5rem;
+        }
+        
+        h1 {
+            font-size: 1.875rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+        }
+        
+        .stButton > button {
+            padding: 0.65rem 1.5rem;
+            font-size: 0.925rem;
+        }
+    }
+    
+    /* ==================== SCROLLBAR STYLING ==================== */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--gray-100);
+        border-radius: var(--radius-full);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+        border-radius: var(--radius-full);
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, var(--primary-blue-dark) 0%, #1E3A8A 100%);
+    }
+    
+    /* ==================== SELECTION STYLING ==================== */
+    ::selection {
+        background: rgba(37, 99, 235, 0.2);
+        color: var(--gray-900);
+    }
+    
+    ::-moz-selection {
+        background: rgba(37, 99, 235, 0.2);
+        color: var(--gray-900);
+    }
+    
+    /* ==================== CAPTION STYLING ==================== */
+    .stCaption {
+        color: var(--gray-500);
+        font-size: 0.825rem;
+        font-style: italic;
+    }
+    
+    /* ==================== SPINNER ==================== */
+    .stSpinner > div {
+        border-color: var(--primary-blue) transparent transparent transparent;
+    }
+    
+    /* ==================== FOOTER ENHANCEMENTS ==================== */
+    footer {
+        background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+        padding: 2rem;
+        border-radius: var(--radius-xl);
+        margin-top: 3rem;
+        box-shadow: var(--shadow-md);
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -599,7 +1265,7 @@ def decode_bytes_to_text(raw: bytes) -> str:
             return raw.decode('utf-8', errors='ignore')
 
 # -------------------------
-# STREAMLIT UI + WORKFLOW (PART 4)
+# STREAMLIT UI + WORKFLOW
 # -------------------------
 
 def main():
@@ -743,26 +1409,48 @@ def main():
             help="This prefix will be added to all detected image UUIDs"
         )
 
-        uploaded = st.file_uploader(
-            "📤 Upload Angular Code File",
-            type=['txt', 'md', 'html', 'ts', 'js', 'pdf'],
-            help="Supported formats: .txt, .md, .html, .ts, .js, .pdf"
+        st.markdown("#### 📥 Choose Input Method")
+        input_method = st.radio(
+            "Select how you want to provide your code:",
+            options=["📤 Upload File", "📝 Paste Code"],
+            horizontal=True,
+            label_visibility="collapsed"
         )
 
-        if uploaded:
-            st.info(f"✅ File uploaded: **{uploaded.name}**")
+        code_text = ""
+        source_filename = "code"
 
-            if st.button("⚡ Process Angular Code"):
+        if input_method == "📤 Upload File":
+            uploaded = st.file_uploader(
+                "📤 Upload Angular Code File",
+                type=['txt', 'md', 'html', 'ts', 'js', 'css', 'scss', 'json', 'component.ts'],
+                help="Supported formats: .txt, .md, .html, .ts, .js, .css, .scss, .json"
+            )
+            if uploaded:
+                st.info(f"✅ File uploaded: **{uploaded.name}**")
                 try:
                     raw = uploaded.read()
-                    text = decode_bytes_to_text(raw)
-                    if uploaded.name.lower().endswith('.pdf'):
-                        st.warning("⚠️ PDF->text extraction is basic; results may vary.")
-                    uuids = detect_uuids_in_text(text)
-                    modified, replaced = add_url_prefix_to_angular_code(text, url_prefix)
+                    code_text = decode_bytes_to_text(raw)
+                    source_filename = uploaded.name.rsplit('.', 1)[0] if '.' in uploaded.name else uploaded.name
+                except Exception as e:
+                    st.error(f"❌ Error reading file: {str(e)}")
+        else:
+            code_text = st.text_area(
+                "📝 Paste Your Angular Code Here",
+                height=300,
+                placeholder="Paste your TypeScript, HTML, CSS, or any Angular code here...\n\nExample:\n<img src='uuid-here'>\nimageUrl: 'uuid-here'",
+                help="Paste your code directly. The processor will find and update all UUID image references."
+            )
+            source_filename = "pasted_code"
+
+        if code_text:
+            if st.button("⚡ Process Angular Code", type="primary"):
+                try:
+                    uuids = detect_uuids_in_text(code_text)
+                    modified, replaced = add_url_prefix_to_angular_code(code_text, url_prefix)
 
                     st.session_state['angular_output'] = modified
-                    st.session_state['angular_filename'] = uploaded.name
+                    st.session_state['angular_filename'] = source_filename
                     st.session_state['stats']['files_processed'] += 1
 
                     st.success("✅ Angular code processed successfully!")
@@ -783,46 +1471,79 @@ def main():
                             st.code(f"Before: {sample}", language="text")
                             st.code(f"After: {url_prefix}{sample}", language="text")
                 except Exception as e:
-                    st.error(f"❌ Error processing file: {str(e)}")
+                    st.error(f"❌ Error processing code: {str(e)}")
 
-        # Downloads for angular output
+        # Output section - display and download/copy
         if 'angular_output' in st.session_state:
             st.markdown("---")
-            st.markdown("### 💾 Download Processed Code")
-            base = st.session_state['angular_filename'].rsplit('.', 1)[0]
+            st.markdown("### 📤 Processed Output")
+            
+            # Display formatted code with copy button
+            st.markdown("#### 💻 View & Copy Code")
+            
+            # Create a code block with proper formatting
+            st.code(st.session_state['angular_output'], language="typescript", line_numbers=True)
+            
+            # Alternative: Display in a text area for easy copying
+            with st.expander("📋 Raw Output (Click to Expand & Copy)", expanded=False):
+                st.text_area(
+                    "Processed Code",
+                    value=st.session_state['angular_output'],
+                    height=400,
+                    label_visibility="collapsed",
+                    help="You can select all text and copy from here"
+                )
+            
+            st.markdown("#### 💾 Download Options")
+            base = st.session_state['angular_filename']
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.download_button(
-                    "📄 Download as .txt",
+                    "📄 .txt",
                     data=st.session_state['angular_output'],
                     file_name=f"{base}_modified.txt",
                     mime="text/plain",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
                 )
             with col2:
                 st.download_button(
-                    "📝 Download as .md",
+                    "📝 .md",
                     data=st.session_state['angular_output'],
                     file_name=f"{base}_modified.md",
                     mime="text/markdown",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
                 )
             with col3:
+                st.download_button(
+                    "💻 .ts",
+                    data=st.session_state['angular_output'],
+                    file_name=f"{base}_modified.ts",
+                    mime="text/typescript",
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
+                )
+            with col4:
                 pdf_buf = create_text_to_pdf(st.session_state['angular_output'])
                 st.download_button(
-                    "📕 Download as .pdf",
+                    "📕 .pdf",
                     data=pdf_buf,
                     file_name=f"{base}_modified.pdf",
                     mime="application/pdf",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
                 )
+            
+            # File info
+            st.caption(f"📦 Output ready: **{base}_modified** • Size: {len(st.session_state['angular_output']):,} bytes")
 
     # Footer
     st.markdown("---")
     st.markdown("""
     <div style='text-align: center; padding: 1.5rem 0; color: #6B7280;'>
-        <p style='margin: 0; font-size: 0.9rem;'>Built with ❤️ using <strong>Streamlit</strong> | Professional Edition</p>
+        <p style='margin: 0; font-size: 0.9rem;'>Built with ❤️ using <strong>Streamlit</strong> | Professional Edition v2.0</p>
     </div>
     """, unsafe_allow_html=True)
 
