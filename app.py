@@ -727,13 +727,13 @@ def add_url_prefix_to_angular_code(text: str, url_prefix: str) -> Tuple[str, int
     """
     # Patterns target common usages: src="UUID", [src]="'UUID'", imageUrl: 'UUID', url('UUID'), plain 'UUID'
     patterns = [
-        (re.compile(r'(src\s*=\s*["'])(%s)(["'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        (re.compile(r'(\[src\]\s*=\s*["']\s*)(%s)(["'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        (re.compile(r'(imageUrl\s*:\s*["'])(%s)(["'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        (re.compile(r'(url\(\s*["'])(%s)(["\']\s*\))' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        # fallback: standalone quoted UUIDs (be careful â€” this can overmatch in rare cases)
-        (re.compile(r'(["'])(%s)(["'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-    ]
+    (re.compile(r'(src\s*=\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+    (re.compile(r'(\[src\]\s*=\s*["\\\']\s*)(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+    (re.compile(r'(imageUrl\s*:\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+    (re.compile(r'(url\(\s*["\'])(%s)(["\']\s*\))' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+    (re.compile(r'(["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
+]
+
 
     modified = text
     total_replacements = 0
