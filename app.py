@@ -107,23 +107,66 @@ def apply_professional_styling():
         transform: translateY(0);
     }
     
-    /* Download Buttons - Special Styling */
+    /* Download Buttons - Stylish Teal/Cyan Gradient */
     .stDownloadButton > button {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
         color: white !important;
-        border: none;
-        border-radius: 6px;
-        padding: 0.6rem 1.5rem;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 0.75rem 1.75rem !important;
+        font-weight: 700 !important;
+        font-size: 0.95rem !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35), 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    .stDownloadButton > button:before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent) !important;
+        transition: left 0.5s !important;
     }
     
     .stDownloadButton > button:hover {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        transform: translateY(-1px);
+        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+        box-shadow: 0 6px 25px rgba(6, 182, 212, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-3px) scale(1.02) !important;
+    }
+    
+    .stDownloadButton > button:hover:before {
+        left: 100% !important;
+    }
+    
+    .stDownloadButton > button:active {
+        transform: translateY(-1px) scale(0.98) !important;
+        box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3) !important;
+    }
+    
+    /* Add download icon effect */
+    .stDownloadButton > button::after {
+        content: '⬇' !important;
+        margin-left: 8px !important;
+        font-size: 1.1rem !important;
+        display: inline-block !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .stDownloadButton > button:hover::after {
+        transform: translateY(3px) !important;
+        animation: bounce 0.6s infinite !important;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(5px); }
     }
     
     /* Input Fields - Clean and Professional */
