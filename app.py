@@ -16,16 +16,396 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.units import inch
 import copy
+import os
 
 # -----------------------------------------------------
-# PROFESSIONAL THEMING
+# PROFESSIONAL THEMING - ENHANCED WITH LIGHT COLORS
 # -----------------------------------------------------
 def apply_professional_styling():
-    """Apply professional, government-style CSS theme"""
+    """Apply professional, modern light-themed CSS with high contrast"""
     st.markdown("""
     <style>
-    /* fonts, colors, page theme… (YOUR ORIGINAL STYLING HERE) */
-    /* I am keeping this unchanged */
+    /* Import Professional Font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    /* Global Reset and Base Styles */
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    /* Main App Background - Light Professional */
+    .stApp {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    }
+    
+    /* Sidebar Styling - Clean White */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #ffffff 0%, #f8f9fb 100%);
+        border-right: 2px solid #e1e8ed;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+    }
+    
+    [data-testid="stSidebar"] .element-container {
+        color: #1a202c;
+    }
+    
+    /* Headers - High Contrast Dark Text */
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 700 !important;
+        color: #1a202c !important;
+        letter-spacing: -0.02em;
+    }
+    
+    h1 {
+        font-size: 2.5rem !important;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    h2 {
+        font-size: 1.75rem !important;
+        color: #2d3748 !important;
+        border-bottom: 3px solid #3b82f6;
+        padding-bottom: 0.5rem;
+        margin-top: 2rem !important;
+    }
+    
+    h3 {
+        font-size: 1.35rem !important;
+        color: #2d3748 !important;
+    }
+    
+    /* Paragraph and Body Text - High Contrast */
+    p, div, span, label {
+        color: #2d3748 !important;
+        line-height: 1.7;
+    }
+    
+    /* Buttons - Modern Professional */
+    .stButton > button {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white !important;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: 0.025em;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+    
+    .stButton > button:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0);
+    }
+    
+    /* Download Buttons - Stylish Teal/Cyan Gradient */
+    .stDownloadButton > button {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 0.75rem 1.75rem !important;
+        font-weight: 700 !important;
+        font-size: 0.95rem !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35), 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    .stDownloadButton > button:before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent) !important;
+        transition: left 0.5s !important;
+    }
+    
+    .stDownloadButton > button:hover {
+        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+        box-shadow: 0 6px 25px rgba(6, 182, 212, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-3px) scale(1.02) !important;
+    }
+    
+    .stDownloadButton > button:hover:before {
+        left: 100% !important;
+    }
+    
+    .stDownloadButton > button:active {
+        transform: translateY(-1px) scale(0.98) !important;
+        box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3) !important;
+    }
+    
+    /* Add download icon effect */
+    .stDownloadButton > button::after {
+        content: '⬇' !important;
+        margin-left: 8px !important;
+        font-size: 1.1rem !important;
+        display: inline-block !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .stDownloadButton > button:hover::after {
+        transform: translateY(3px) !important;
+        animation: bounce 0.6s infinite !important;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(5px); }
+    }
+    
+    /* Input Fields - Clean and Professional */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        background-color: #ffffff !important;
+        border: 2px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        color: #1a202c !important;
+        font-size: 0.95rem !important;
+        padding: 0.75rem !important;
+        transition: all 0.2s ease;
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    }
+    
+    /* Labels - Dark and Clear */
+    .stTextInput > label,
+    .stTextArea > label,
+    .stSelectbox > label,
+    .stRadio > label {
+        color: #1a202c !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Metrics - Modern Card Style */
+    [data-testid="stMetricValue"] {
+        color: #1e40af !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: #475569 !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+    }
+    
+    div[data-testid="metric-container"] {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Tabs - Clean Professional */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.5rem;
+        background-color: white;
+        padding: 0.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: transparent;
+        color: #64748b !important;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: #f1f5f9;
+        color: #3b82f6 !important;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+        color: white !important;
+    }
+    
+    /* Expander - Modern Card Style */
+    .streamlit-expanderHeader {
+        background-color: white !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        color: #1a202c !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        border-color: #3b82f6 !important;
+        background-color: #f8fafc !important;
+    }
+    
+    .streamlit-expanderContent {
+        background-color: #ffffff !important;
+        border: 2px solid #e2e8f0 !important;
+        border-top: none !important;
+        border-radius: 0 0 8px 8px !important;
+    }
+    
+    /* Code Blocks - Professional Monospace */
+    .stCodeBlock, code {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border-radius: 8px !important;
+        border: 2px solid #334155 !important;
+        font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Info/Success/Warning/Error Boxes - High Contrast */
+    .stAlert {
+        border-radius: 8px !important;
+        border-left: 4px solid !important;
+        padding: 1rem 1.5rem !important;
+        font-weight: 500 !important;
+    }
+    
+    [data-baseweb="notification"] {
+        background-color: white !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    }
+    
+    .stSuccess {
+        background-color: #ecfdf5 !important;
+        border-left-color: #10b981 !important;
+        color: #065f46 !important;
+    }
+    
+    .stInfo {
+        background-color: #eff6ff !important;
+        border-left-color: #3b82f6 !important;
+        color: #1e40af !important;
+    }
+    
+    .stWarning {
+        background-color: #fffbeb !important;
+        border-left-color: #f59e0b !important;
+        color: #92400e !important;
+    }
+    
+    .stError {
+        background-color: #fef2f2 !important;
+        border-left-color: #ef4444 !important;
+        color: #991b1b !important;
+    }
+    
+    /* Progress Bar - Modern Gradient */
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+        border-radius: 10px !important;
+    }
+    
+    /* Radio Buttons - Clean Style */
+    .stRadio > div {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .stRadio > div > label > div[role="radiogroup"] > label {
+        background-color: #f8fafc;
+        padding: 0.75rem 1.25rem;
+        border-radius: 6px;
+        border: 2px solid #cbd5e1;
+        margin: 0.25rem;
+        transition: all 0.2s ease;
+        color: #1a202c !important;
+        font-weight: 500;
+    }
+    
+    .stRadio > div > label > div[role="radiogroup"] > label:hover {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    
+    /* File Uploader - Professional */
+    [data-testid="stFileUploader"] {
+        background-color: white;
+        border: 2px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: #3b82f6;
+        background-color: #f8fafc;
+    }
+    
+    /* Divider */
+    hr {
+        border: none;
+        border-top: 2px solid #e2e8f0 !important;
+        margin: 2rem 0;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    }
+    
+    /* Caption and Helper Text */
+    .caption, small {
+        color: #64748b !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Links */
+    a {
+        color: #3b82f6 !important;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+    
+    a:hover {
+        color: #2563eb !important;
+        text-decoration: underline;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -599,16 +979,31 @@ def decode_bytes_to_text(raw: bytes) -> str:
             return raw.decode('utf-8', errors='ignore')
 
 # -------------------------
-# STREAMLIT UI + WORKFLOW (PART 4)
+# GITHUB ZIP DOWNLOAD HELPER
+# -------------------------
+
+@st.cache_data(ttl=3600)
+def fetch_github_zip(url: str) -> bytes:
+    """Fetch zip file from GitHub with caching"""
+    response = requests.get(url, timeout=30)
+    if response.status_code == 200:
+        return response.content
+    raise RuntimeError(f"Failed to fetch from GitHub: {response.status_code}")
+
+# -------------------------
+# STREAMLIT UI + WORKFLOW
 # -------------------------
 
 def main():
-    # Header / Hero
+    # Header / Hero with enhanced styling
     st.markdown("""
-    <div style='text-align: center; padding: 1rem 0 2rem 0;'>
-        <h1 style='margin-bottom: 0.5rem;'>🎨 Figma UI Extractor</h1>
-        <p style='font-size: 1.05rem; color: #6B7280; font-weight: 500;'>
+    <div style='text-align: center; padding: 2rem 0 3rem 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; margin-bottom: 2rem; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);'>
+        <h1 style='margin-bottom: 0.75rem; color: white !important; -webkit-text-fill-color: white !important; font-size: 3rem !important;'>🎨 Figma UI Extractor</h1>
+        <p style='font-size: 1.2rem; color: rgba(255,255,255,0.95) !important; font-weight: 500; margin: 0;'>
             Enterprise-Grade UI Component Extraction & Angular Code Processing
+        </p>
+        <p style='font-size: 0.95rem; color: rgba(255,255,255,0.8) !important; margin-top: 0.5rem;'>
+            Professional Tools for Modern Development Workflows
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -628,73 +1023,112 @@ def main():
             st.metric("Downloads", st.session_state['stats']['downloads'])
 
         st.markdown("---")
+        
+        # Angular 19 Boilerplate Download Section - Updated with GitHub URL
+        st.markdown("### 📦 Angular Boilerplate")
+        st.markdown("Download the Angular 19 skeleton/boilerplate code to get started quickly.")
+        
+        github_zip_url = "https://raw.githubusercontent.com/mandarwarghade211009-gif/figma/main/skeleton%20angular%2019.zip"
+        
+        try:
+            angular_zip_bytes = fetch_github_zip(github_zip_url)
+            
+            st.download_button(
+                label="📥 Download Angular 19 Boilerplate",
+                data=angular_zip_bytes,
+                file_name="angular19_skeleton.zip",
+                mime="application/zip",
+                on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                use_container_width=True
+            )
+            st.caption(f"Size: {len(angular_zip_bytes):,} bytes")
+            
+        except Exception as e:
+            st.error(f"❌ Error downloading from GitHub: {str(e)}")
+            st.info("💡 Check your internet connection or verify the GitHub URL is accessible.")
+        
+        st.markdown("---")
         st.markdown("### 📚 Resources")
         st.markdown("""
         - [Figma API Documentation](https://www.figma.com/developers/api)
         - [Angular Framework](https://angular.io)
-        - [ReportLab](https://www.reportlab.com)
+        - [Angular Material](https://material.angular.io)
+        - [ReportLab PDF](https://www.reportlab.com)
         """)
         st.markdown("---")
-        st.markdown("### 🔐 Security")
-        st.info("API tokens are used only for fetching and are not persisted.")
+        st.markdown("### 🔐 Security & Privacy")
+        st.info("🔒 API tokens are used only for fetching and are never stored or logged.")
+        
+        st.markdown("---")
+        st.markdown("""
+        <div style='text-align: center; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;'>
+            <p style='color: white !important; font-weight: 600; margin: 0; font-size: 0.9rem;'>
+                💡 Built with Streamlit
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Tabs
+    # Tabs with enhanced styling
     tab1, tab2 = st.tabs(["🎯 Figma Extraction", "⚡ Angular Processor"])
 
     # --- Figma Extraction Tab ---
     with tab1:
-        st.markdown("### Figma Component Extraction")
-        st.markdown("Extract UI components with metadata, styling, and images from Figma.")
+        st.markdown("### 🎯 Figma Component Extraction")
+        st.markdown("Extract UI components with comprehensive metadata, styling information, and high-resolution images from your Figma designs.")
         st.markdown("---")
 
         col1, col2 = st.columns(2)
         with col1:
-            file_key = st.text_input("📁 Figma File Key", value="", help="Figma file key (from file URL)")
+            file_key = st.text_input("📁 Figma File Key", value="", help="Enter the Figma file key from your design file URL", placeholder="e.g., aBc123dEf456...")
         with col2:
-            node_ids = st.text_input("🔗 Node IDs (comma-separated)", value="", help="Optional: comma-separated node ids")
+            node_ids = st.text_input("🔗 Node IDs", value="", help="Optional: Enter comma-separated node IDs to extract specific components", placeholder="123:456, 789:012 (optional)")
 
-        token = st.text_input("🔑 Figma Personal Access Token", type="password", help="Generate in Figma account settings")
+        token = st.text_input("🔑 Figma Personal Access Token", type="password", help="Generate your token in Figma Account Settings → Personal Access Tokens", placeholder="Enter your Figma API token")
 
-        if st.button("🚀 Extract UI Components"):
+        st.markdown("")
+        
+        if st.button("🚀 Extract UI Components", type="primary", use_container_width=True):
             if not token or not file_key:
-                st.error("⚠️ Please provide a file key and a Figma access token.")
+                st.error("⚠️ Please provide both a Figma file key and a personal access token to proceed.")
             else:
                 try:
                     progress = st.progress(0)
                     status = st.empty()
 
-                    status.text("📡 Fetching nodes from Figma API...")
+                    status.info("📡 Connecting to Figma API and fetching design nodes...")
                     progress.progress(5)
                     nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
 
-                    status.text("🖼️ Collecting images and node metadata...")
+                    status.info("🖼️ Analyzing images and collecting node metadata...")
                     progress.progress(25)
                     image_refs, node_id_list, node_meta = walk_nodes_collect_images_and_ids(nodes_payload)
 
-                    status.text("🔗 Resolving image URLs from Figma...")
+                    status.info("🔗 Resolving image URLs and assets from Figma servers...")
                     progress.progress(50)
                     filtered_fills, renders_map = resolve_image_urls(file_key, image_refs, node_id_list, token)
 
-                    status.text("🎨 Building icon map and merging URLs into nodes...")
+                    status.info("🎨 Building comprehensive icon map and merging data...")
                     progress.progress(70)
                     node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
                     merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
 
-                    status.text("📦 Extracting structured components...")
+                    status.info("📦 Extracting and organizing component structure...")
                     progress.progress(85)
                     final_output = extract_ui_components(merged_payload)
 
-                    status.text("✨ Finalizing extraction and sanitizing URLs...")
+                    status.info("✨ Finalizing extraction and sanitizing URLs for portability...")
                     progress.progress(95)
                     # remove absolute prefix so output is portable; use default figma prefix commonly returned
                     sanitized = remove_url_prefix_from_json(final_output, "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/")
                     st.session_state['metadata_json'] = sanitized
                     st.session_state['stats']['files_processed'] += 1
                     progress.progress(100)
-                    st.success("✅ Extraction completed successfully!")
+                    status.empty()
+                    st.success("✅ Extraction completed successfully! Your UI components are ready for download.")
 
-                    # Metrics display
+                    # Enhanced metrics display
                     st.markdown("### 📊 Extraction Summary")
+                    
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
                         st.metric("Total Components", sanitized['metadata']['totalComponents'])
@@ -705,180 +1139,209 @@ def main():
                     with col4:
                         st.metric("Containers", len(sanitized.get('containers', [])))
 
-                    with st.expander("📋 Category Breakdown"):
-                        for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
-                            count = len(sanitized.get(cat, []))
-                            if count > 0:
-                                st.markdown(f"- **{cat}**: `{count}`")
-                except Exception as e:
-                    st.error(f"❌ Error during extraction: {str(e)}")
-
-        # Downloads for extraction
-        if 'metadata_json' in st.session_state:
-            st.markdown("---")
-            st.markdown("### 💾 Download Extracted Data")
-            json_str = json.dumps(st.session_state['metadata_json'], indent=2, ensure_ascii=False)
-
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.download_button(
-                    "📥 Download metadata.json",
-                    data=json_str,
-                    file_name="metadata.json",
-                    mime="application/json",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
-                )
-            with col2:
-                st.caption(f"Size: {len(json_str):,} bytes")
-
-    # --- Angular Processor Tab (upload or paste) ---
-    with tab2:
-        st.markdown("### Angular Code Image URL Processor")
-        st.markdown("Upload a file or paste code, then automatically prefix UUID image IDs with a full URL.")
-        st.markdown("---")
-
-        url_prefix = st.text_input(
-            "🌐 URL Prefix",
-            value="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/",
-            help="This prefix will be added to all detected image UUIDs"
-        )
-
-        st.markdown("#### 📥 Choose Input Method")
-        input_method = st.radio(
-            "Select how you want to provide your code:",
-            options=["📤 Upload File", "📝 Paste Code"],
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-
-        code_text = ""
-        source_filename = "code"
-
-        if input_method == "📤 Upload File":
-            uploaded = st.file_uploader(
-                "📤 Upload Angular Code File",
-                type=['txt', 'md', 'html', 'ts', 'js', 'css', 'scss', 'json'],
-                help="Supported formats: .txt, .md, .html, .ts, .js, .css, .scss, .json"
-            )
-
-            if uploaded:
-                st.info(f"✅ File uploaded: **{uploaded.name}**")
-                try:
-                    raw = uploaded.read()
-                    code_text = decode_bytes_to_text(raw)
-                    source_filename = uploaded.name.rsplit('.', 1)[0] if '.' in uploaded.name else uploaded.name
-                except Exception as e:
-                    st.error(f"❌ Error reading file: {str(e)}")
-        else:
-            code_text = st.text_area(
-                "📝 Paste Your Angular Code Here",
-                height=320,
-                placeholder="Paste your TypeScript / HTML / CSS code here...",
-                help="Once you paste code here, the Process button will be enabled below."
-            )
-            source_filename = "pasted_code"
-
-        # Show Process button only when there is some code (paste-detected or file content)
-        if code_text and code_text.strip():
-            if st.button("⚡ Process Angular Code", type="primary"):
-                try:
-                    uuids = detect_uuids_in_text(code_text)
-                    modified, replaced = add_url_prefix_to_angular_code(code_text, url_prefix)
-
-                    st.session_state['angular_output'] = modified
-                    st.session_state['angular_filename'] = source_filename
-                    st.session_state['stats']['files_processed'] += 1
-
-                    st.success("✅ Angular code processed successfully!")
-
-                    # Processing metrics
-                    st.markdown("### 📊 Processing Summary")
-                    col1, col2, col3 = st.columns(3)
+                    st.markdown("---")
+                    
+                    # Component breakdown
+                    st.markdown("### 📋 Component Breakdown")
+                    
+                    categories = {
+                        'Text Elements': len(sanitized.get('textElements', [])),
+                        'Buttons': len(sanitized.get('buttons', [])),
+                        'Inputs': len(sanitized.get('inputs', [])),
+                        'Containers': len(sanitized.get('containers', [])),
+                        'Images': len(sanitized.get('images', [])),
+                        'Navigation': len(sanitized.get('navigation', [])),
+                        'Vectors': len(sanitized.get('vectors', [])),
+                        'Other': len(sanitized.get('other', []))
+                    }
+                    
+                    for category, count in categories.items():
+                        if count > 0:
+                            st.write(f"**{category}:** {count}")
+                    
+                    st.markdown("---")
+                    
+                    # Download options
+                    st.markdown("### 💾 Download Options")
+                    
+                    col1, col2 = st.columns(2)
+                    
                     with col1:
-                        st.metric("Image IDs Found", len(uuids))
+                        json_str = json.dumps(sanitized, indent=2)
+                        st.download_button(
+                            label="📥 Download JSON",
+                            data=json_str,
+                            file_name=f"figma_ui_components_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                            mime="application/json",
+                            use_container_width=True
+                        )
+                    
                     with col2:
-                        st.metric("Replacements Made", replaced)
-                    with col3:
-                        st.metric("Output Size", f"{len(modified):,} bytes")
+                        pdf_buffer = create_text_to_pdf(json_str)
+                        st.download_button(
+                            label="📥 Download PDF",
+                            data=pdf_buffer,
+                            file_name=f"figma_ui_components_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    
+                    # Preview
+                    with st.expander("🔍 Preview JSON Data", expanded=False):
+                        st.json(sanitized)
 
-                    if len(uuids) > 0:
-                        with st.expander("🔍 Sample Transformation"):
-                            sample = uuids[0]
-                            st.code(f"Before: {sample}", language="text")
-                            st.code(f"After: {url_prefix}{sample}", language="text")
                 except Exception as e:
-                    st.error(f"❌ Error processing code: {str(e)}")
+                    st.error(f"❌ An error occurred: {str(e)}")
+                    st.info("💡 Please verify your Figma file key, node IDs, and API token are correct.")
+
+    # --- Angular Processor Tab ---
+    with tab2:
+        st.markdown("### ⚡ Angular Code Processor")
+        st.markdown("Process Angular files by adding URL prefixes to image references (UUIDs) for proper asset loading.")
+        st.markdown("---")
+        
+        url_prefix = st.text_input(
+            "🔗 URL Prefix",
+            value="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/",
+            help="Enter the base URL to prepend to all UUID image references",
+            placeholder="https://your-cdn.com/images/"
+        )
+        
+        st.markdown("### 📤 Upload Angular Files")
+        uploaded_files = st.file_uploader(
+            "Choose Angular files (.ts, .html, .css, .scss)",
+            type=['ts', 'html', 'css', 'scss'],
+            accept_multiple_files=True,
+            help="Upload one or more Angular component files to process"
+        )
+        
+        if uploaded_files:
+            st.markdown(f"### 📁 Uploaded Files: {len(uploaded_files)}")
+            
+            if st.button("🔄 Process Files", type="primary", use_container_width=True):
+                processed_files = []
+                total_replacements = 0
+                
+                progress = st.progress(0)
+                status = st.empty()
+                
+                for idx, uploaded_file in enumerate(uploaded_files):
+                    status.info(f"Processing {uploaded_file.name}...")
+                    progress.progress((idx + 1) / len(uploaded_files))
+                    
+                    try:
+                        file_content = decode_bytes_to_text(uploaded_file.read())
+                        modified_content, replacements = add_url_prefix_to_angular_code(file_content, url_prefix)
+                        total_replacements += replacements
+                        
+                        processed_files.append({
+                            'name': uploaded_file.name,
+                            'original': file_content,
+                            'modified': modified_content,
+                            'replacements': replacements
+                        })
+                    except Exception as e:
+                        st.warning(f"⚠️ Error processing {uploaded_file.name}: {str(e)}")
+                
+                progress.progress(1.0)
+                status.empty()
+                
+                st.success(f"✅ Processing complete! Made {total_replacements} replacements across {len(processed_files)} files.")
+                
+                # Summary
+                st.markdown("### 📊 Processing Summary")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Files Processed", len(processed_files))
+                with col2:
+                    st.metric("Total Replacements", total_replacements)
+                with col3:
+                    avg_replacements = total_replacements / len(processed_files) if processed_files else 0
+                    st.metric("Avg per File", f"{avg_replacements:.1f}")
+                
+                st.markdown("---")
+                
+                # Individual file results
+                st.markdown("### 📋 File Details")
+                
+                for pf in processed_files:
+                    with st.expander(f"📄 {pf['name']} - {pf['replacements']} replacements"):
+                        
+                        tab_orig, tab_mod, tab_diff = st.tabs(["Original", "Modified", "Changes"])
+                        
+                        with tab_orig:
+                            st.code(pf['original'], language='typescript' if pf['name'].endswith('.ts') else 'html')
+                        
+                        with tab_mod:
+                            st.code(pf['modified'], language='typescript' if pf['name'].endswith('.ts') else 'html')
+                        
+                        with tab_diff:
+                            st.info(f"Made {pf['replacements']} UUID prefix replacements")
+                            
+                            # Show UUIDs found
+                            uuids_found = detect_uuids_in_text(pf['original'])
+                            if uuids_found:
+                                st.markdown("**UUIDs Found:**")
+                                for uuid in uuids_found:
+                                    st.code(f"{uuid} → {url_prefix}{uuid}")
+                        
+                        # Download individual file
+                        st.download_button(
+                            label=f"📥 Download {pf['name']}",
+                            data=pf['modified'],
+                            file_name=f"processed_{pf['name']}",
+                            mime="text/plain",
+                            key=f"download_{pf['name']}",
+                            use_container_width=True
+                        )
+                
+                st.markdown("---")
+                
+                # Download all as PDF
+                st.markdown("### 💾 Bulk Download")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Combine all modified files
+                    combined_text = "\n\n" + "="*80 + "\n\n".join([
+                        f"FILE: {pf['name']}\n{'='*80}\n\n{pf['modified']}"
+                        for pf in processed_files
+                    ])
+                    
+                    st.download_button(
+                        label="📥 Download All (TXT)",
+                        data=combined_text,
+                        file_name=f"angular_processed_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain",
+                        use_container_width=True
+                    )
+                
+                with col2:
+                    pdf_buffer = create_text_to_pdf(combined_text)
+                    st.download_button(
+                        label="📥 Download All (PDF)",
+                        data=pdf_buffer,
+                        file_name=f"angular_processed_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+        
         else:
-            st.info("Paste some code or upload a file to enable the processor.")
-
-        # Downloads for angular output
-        if 'angular_output' in st.session_state:
+            st.info("👆 Upload Angular files above to begin processing")
+            
             st.markdown("---")
-            st.markdown("### 💾 Download / Copy Processed Code")
-            base = st.session_state['angular_filename']
-            if '.' in base:
-                base = base.rsplit('.', 1)[0]
-
-            # Pretty code block for direct copy (indentation preserved)
-            st.markdown("#### 💻 View & Copy Code")
-            st.code(st.session_state['angular_output'], language="typescript")
-
-            with st.expander("📋 Raw Output (select & copy)", expanded=False):
-                st.text_area(
-                    "Processed Code",
-                    value=st.session_state['angular_output'],
-                    height=380,
-                    label_visibility="collapsed",
-                    help="Select all and copy from here; indentation is preserved."
-                )
-
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.download_button(
-                    "📄 .txt",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.txt",
-                    mime="text/plain",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col2:
-                st.download_button(
-                    "📝 .md",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.md",
-                    mime="text/markdown",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col3:
-                st.download_button(
-                    "💻 .ts",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.ts",
-                    mime="text/typescript",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col4:
-                pdf_buf = create_text_to_pdf(st.session_state['angular_output'])
-                st.download_button(
-                    "📕 .pdf",
-                    data=pdf_buf,
-                    file_name=f"{base}_modified.pdf",
-                    mime="application/pdf",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style='text-align: center; padding: 1.5rem 0; color: #6B7280;'>
-        <p style='margin: 0; font-size: 0.9rem;'>Built with ❤️ using <strong>Streamlit</strong> | Professional Edition</p>
-    </div>
-    """, unsafe_allow_html=True)
-
+            st.markdown("### 💡 How It Works")
+            st.markdown("""
+            This tool automatically:
+            1. Detects UUID patterns in your Angular code (e.g., `abc123...`)
+            2. Prepends your specified URL prefix to make them valid URLs
+            3. Works with common patterns: `src="UUID"`, `[src]="'UUID'"`, `imageUrl: 'UUID'`, etc.
+            4. Preserves all other code intact
+            
+            **Supported file types:** TypeScript (.ts), HTML, CSS, SCSS
+            """)
 
 if __name__ == "__main__":
     main()
