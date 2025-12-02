@@ -1051,4 +1051,116 @@ def main():
                 st.info(f"✅ File uploaded: **{uploaded.name}**")
                 try:
                     raw = uploaded.read()
-                    code_text = decode_bytes_to_text(
+                    code_text = decode_bytes_to_text(raw)
+                    source_filename = uploaded.name.rsplit('.', 1)[0] if '.' in uploaded.name else uploaded.name
+                except Exception as e:
+                    st.error(f"❌ Error reading file: {str(e)}")
+        else:
+            code_text = st.text_area(
+                "📝 Paste Your Angular Code Here",
+                height=320,
+                placeholder="Paste your TypeScript / HTML / CSS code here...",
+                help="Paste code to enable the Process button"
+            )
+            source_filename = "pasted_code"
+
+        # Show Process button only when there is code
+        if code_text and code_text.strip():
+            if st.button("⚡ Process Angular Code", type="primary"):
+                try:
+                    uuids = detect_uuids_in_text(code_text)
+                    modified, replaced = add_url_prefix_to_angular_code(code_text, url_prefix)
+
+                    st.session_state['angular_output'] = modified
+                    st.session_state['angular_filename'] = source_filename
+                    st.session_state['stats']['files_processed'] += 1
+
+                    st.success("✅ Angular code processed successfully!")
+
+                    # Processing metrics
+                    st.markdown("### 📊 Processing Summary")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Image IDs Found", len(uuids))
+                    with col2:
+                        st.metric("Replacements Made", replaced)
+                    with col3:
+                        st.metric("Output Size", f"{len(modified):,} bytes")
+
+                    if len(uuids) > 0:
+                        with st.expander("🔍 Sample Transformation"):
+                            sample = uuids[0]
+                            st.code(f"Before: {sample}", language="text")
+                            st.code(f"After: {url_prefix}{sample}", language="text")
+                except Exception as e:
+                    st.error(f"❌ Error processing code: {str(e)}")
+        else:
+            st.info("📝 Paste code or upload a file to enable processing")
+
+        # Downloads for angular output
+        if 'angular_output' in st.session_state:
+            st.markdown("---")
+            st.markdown("### 💾 Download Processed Code")
+            base = st.session_state['angular_filename']
+            if '.' in base:
+                base = base.rsplit('.', 1)[0]
+
+            # Code preview
+            st.markdown("#### 💻 Preview & Copy")
+            st.code(st.session_state['angular_output'], language="typescript")
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.download_button(
+                    "📄 .txt",
+                    data=st.session_state['angular_output'],
+                    file_name=f"{base}_modified.txt",
+                    mime="text/plain",
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
+                )
+            with col2:
+                st.download_button(
+                    "📝 .md",
+                    data=st.session_state['angular_output'],
+                    file_name=f"{base}_modified.md",
+                    mime="text/markdown",
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
+                )
+            with col3:
+                st.download_button(
+                    "💻 .ts",
+                    data=st.session_state['angular_output'],
+                    file_name=f"{base}_modified.ts",
+                    mime="text/typescript",
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
+                )
+            with col4:
+                pdf_buf = create_text_to_pdf(st.session_state['angular_output'])
+                st.download_button(
+                    "📕 .pdf",
+                    data=pdf_buf,
+                    file_name=f"{base}_modified.pdf",
+                    mime="application/pdf",
+                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                    use_container_width=True
+                )
+
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align: center; padding: 1.5rem 0; color: #6B7280;'>
+        <p style='margin: 0; font-size: 0.9rem;'>
+            🎯 Icon-Optimized Edition | Built with ❤️ using <strong>Streamlit</strong>
+        </p>
+        <p style='margin: 0.5rem 0 0 0; font-size: 0.8rem;'>
+            Smart filtering reduces API calls by 70-90% • Avoids rate limits
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+if __name__ == "__main__":
+    main()
