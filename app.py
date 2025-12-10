@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Professional Figma UI Extractor & Angular Code Processor
-Enterprise-grade design system for UI extraction and code processing
+Professional Figma UI Extractor
+Enterprise-grade design system for UI extraction
 """
 
 import streamlit as st
@@ -11,21 +11,346 @@ import re
 import datetime
 from io import BytesIO
 from typing import Any, Dict, List, Set, Tuple, Optional
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from reportlab.lib.units import inch
 import copy
 
 # -----------------------------------------------------
-# PROFESSIONAL THEMING
+# PROFESSIONAL THEMING - Modern SaaS Design
 # -----------------------------------------------------
 def apply_professional_styling():
-    """Apply professional, government-style CSS theme"""
+    """Apply modern, professional gradient-based theme"""
     st.markdown("""
     <style>
-    /* fonts, colors, page theme… (YOUR ORIGINAL STYLING HERE) */
-    /* I am keeping this unchanged */
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    /* Root Variables - Modern Purple/Blue Gradient Theme */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --accent-color: #667eea;
+        --accent-hover: #764ba2;
+        --dark-bg: #0f0f23;
+        --card-bg: #1a1a2e;
+        --text-primary: #ffffff;
+        --text-secondary: #a0a0c0;
+        --border-color: rgba(102, 126, 234, 0.2);
+        --shadow-lg: 0 20px 60px rgba(102, 126, 234, 0.15);
+        --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Global Styling */
+    .stApp {
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: var(--text-primary);
+    }
+    
+    /* Hide Streamlit Branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Custom Header Styling */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #667eea 0%, #f5576c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    h1 {
+        font-size: 3.5rem !important;
+        margin-bottom: 0.5rem !important;
+        line-height: 1.2;
+    }
+    
+    h2 {
+        font-size: 2rem !important;
+        margin-top: 2rem !important;
+    }
+    
+    h3 {
+        font-size: 1.5rem !important;
+        font-weight: 600;
+    }
+    
+    /* Paragraph & Text */
+    p, .stMarkdown {
+        color: var(--text-secondary);
+        font-size: 1.05rem;
+        line-height: 1.7;
+        font-weight: 400;
+    }
+    
+    /* Cards & Containers */
+    .stTabs, .element-container, div[data-testid="stExpander"] {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Tab Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 1rem;
+        background: transparent;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 1rem 2rem;
+        border-radius: 12px 12px 0 0;
+        transition: all 0.3s ease;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Input Fields */
+    .stTextInput > div > div > input,
+    .stTextArea textarea {
+        background: rgba(26, 26, 46, 0.6) !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: 12px !important;
+        color: var(--text-primary) !important;
+        font-size: 1rem !important;
+        padding: 0.75rem 1rem !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stTextArea textarea:focus {
+        border-color: var(--accent-color) !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        outline: none !important;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: var(--primary-gradient) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 1.05rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        text-transform: none !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5) !important;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0);
+    }
+    
+    /* Download Buttons */
+    .stDownloadButton > button {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3) !important;
+    }
+    
+    .stDownloadButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.5) !important;
+    }
+    
+    /* Metrics */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: var(--text-secondary) !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Progress Bar */
+    .stProgress > div > div > div > div {
+        background: var(--primary-gradient) !important;
+        border-radius: 10px;
+    }
+    
+    .stProgress > div > div {
+        background: rgba(102, 126, 234, 0.2) !important;
+        border-radius: 10px;
+    }
+    
+    /* Alert Boxes */
+    .stAlert {
+        background: rgba(26, 26, 46, 0.8) !important;
+        border-left: 4px solid var(--accent-color) !important;
+        border-radius: 12px !important;
+        padding: 1rem 1.5rem !important;
+        color: var(--text-primary) !important;
+    }
+    
+    .stSuccess {
+        border-left-color: #00f2fe !important;
+    }
+    
+    .stError {
+        border-left-color: #f5576c !important;
+    }
+    
+    .stInfo {
+        border-left-color: #4facfe !important;
+    }
+    
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+        border-right: 1px solid var(--border-color);
+    }
+    
+    [data-testid="stSidebar"] .stMarkdown {
+        color: var(--text-secondary);
+    }
+    
+    /* Code Blocks */
+    .stCodeBlock, code {
+        background: rgba(15, 15, 35, 0.8) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        color: #a0a0c0 !important;
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        background: rgba(26, 26, 46, 0.6) !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: rgba(102, 126, 234, 0.1) !important;
+        border-color: var(--accent-color) !important;
+    }
+    
+    /* Divider */
+    hr {
+        border: none;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+        margin: 2rem 0;
+    }
+    
+    /* Radio Buttons */
+    .stRadio > label {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+    }
+    
+    /* File Uploader */
+    [data-testid="stFileUploader"] {
+        background: rgba(26, 26, 46, 0.6);
+        border: 2px dashed var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: var(--accent-color);
+        background: rgba(102, 126, 234, 0.05);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--dark-bg);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-hover);
+    }
+    
+    /* Custom Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .element-container {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    /* Glassmorphism Effect */
+    .glass-card {
+        background: rgba(26, 26, 46, 0.4);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Labels */
+    label {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+    }
+    
+    /* Caption */
+    .caption, small {
+        color: var(--text-secondary) !important;
+        font-size: 0.85rem !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -513,109 +838,26 @@ def remove_url_prefix_from_json(payload: Dict[str, Any], url_prefix: str) -> Dic
     return p
 
 # -------------------------
-# ANGULAR CODE PROCESSING + EXPORTS
-# -------------------------
-
-# UUID pattern used in Angular/HTML code for image placeholders
-UUID_RE = r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
-
-def add_url_prefix_to_angular_code(text: str, url_prefix: str) -> Tuple[str, int]:
-    """
-    Finds UUID-only occurrences in common Angular patterns and prefixes them with url_prefix.
-    Returns (modified_text, total_replacements)
-    """
-    # Patterns target common usages: src="UUID", [src]="'UUID'", imageUrl: 'UUID', url('UUID'), plain 'UUID'
-    patterns = [
-        (re.compile(r'(src\s*=\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        (re.compile(r'(\[src\]\s*=\s*["\']\s*)(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        (re.compile(r'(imageUrl\s*:\s*["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        (re.compile(r'(url\(\s*["\'])(%s)(["\']\s*\))' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-        # fallback: standalone quoted UUIDs (be careful — this can overmatch in rare cases)
-        (re.compile(r'(["\'])(%s)(["\'])' % UUID_RE, re.IGNORECASE), r'\1' + url_prefix + r'\2\3'),
-    ]
-
-    modified = text
-    total_replacements = 0
-    for pat, repl in patterns:
-        modified, n = pat.subn(repl, modified)
-        total_replacements += n
-    return modified, total_replacements
-
-def create_text_to_pdf(text_content: str) -> BytesIO:
-    """
-    Convert plain text (or processed code) into a simple PDF stored in-memory (BytesIO).
-    Uses a monospace font style for code readability.
-    """
-    buffer = BytesIO()
-    # Basic single-column document with narrow margins
-    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch, leftMargin=0.5*inch, rightMargin=0.5*inch)
-    styles = getSampleStyleSheet()
-    # Use Normal as parent and Courier-like font name for monospace appearance
-    code_style = ParagraphStyle(
-        'Code',
-        parent=styles.get('Normal'),
-        fontName='Courier',  # fallback to Courier
-        fontSize=8,
-        leading=10,
-        leftIndent=0,
-        rightIndent=0,
-        spaceAfter=6
-    )
-    story = []
-    # Split into manageable chunks to avoid giant paragraphs
-    lines = text_content.splitlines()
-    chunk_size = 60
-    for i in range(0, len(lines), chunk_size):
-        block = lines[i:i+chunk_size]
-        # Escape XML-sensitive characters
-        safe = [ln.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;') for ln in block]
-        story.append(Paragraph('<br/>'.join(safe), code_style))
-    doc.build(story)
-    buffer.seek(0)
-    return buffer
-
-def detect_uuids_in_text(text: str) -> List[str]:
-    """Return unique UUIDs found in the supplied text (order-preserving)."""
-    pattern = re.compile(UUID_RE, re.IGNORECASE)
-    found = pattern.findall(text)
-    # pattern.findall returns list of strings (UUIDs) if pattern has no groups
-    # unify and preserve order
-    seen = set()
-    out = []
-    for f in found:
-        if f not in seen:
-            seen.add(f)
-            out.append(f)
-    return out
-
-# Small utility to safely read uploaded file bytes and decode as utf-8 (fallback)
-def decode_bytes_to_text(raw: bytes) -> str:
-    try:
-        return raw.decode('utf-8')
-    except Exception:
-        try:
-            return raw.decode('latin-1')
-        except Exception:
-            return raw.decode('utf-8', errors='ignore')
-
-# -------------------------
-# STREAMLIT UI + WORKFLOW (PART 4)
+# STREAMLIT UI + WORKFLOW
 # -------------------------
 
 def main():
-    # Header / Hero
+    # Hero Header with Gradient
     st.markdown("""
-    <div style='text-align: center; padding: 1rem 0 2rem 0;'>
-        <h1 style='margin-bottom: 0.5rem;'>🎨 Figma UI Extractor</h1>
-        <p style='font-size: 1.05rem; color: #6B7280; font-weight: 500;'>
-            Enterprise-Grade UI Component Extraction & Angular Code Processing
+    <div style='text-align: center; padding: 3rem 0 2rem 0;'>
+        <div style='display: inline-block; padding: 0.5rem 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); border-radius: 50px; border: 1px solid rgba(102, 126, 234, 0.3); margin-bottom: 1.5rem;'>
+            <span style='font-size: 0.9rem; font-weight: 600; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em;'>✨ Enterprise Edition</span>
+        </div>
+        <h1 style='margin-bottom: 0.8rem; font-size: 3.5rem;'>🎨 Figma UI Extractor</h1>
+        <p style='font-size: 1.2rem; color: #a0a0c0; font-weight: 400; max-width: 700px; margin: 0 auto; line-height: 1.6;'>
+            Extract, analyze, and export UI components from Figma with precision and elegance
         </p>
     </div>
     """, unsafe_allow_html=True)
 
     # Sidebar
     with st.sidebar:
-        st.markdown("### ⚙️ System Information")
+        st.markdown("### ⚙️ Dashboard")
         st.markdown("---")
 
         if 'stats' not in st.session_state:
@@ -623,259 +865,187 @@ def main():
 
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Files Processed", st.session_state['stats']['files_processed'])
+            st.metric("Files", st.session_state['stats']['files_processed'])
         with col2:
             st.metric("Downloads", st.session_state['stats']['downloads'])
 
         st.markdown("---")
+        st.markdown("### 🎯 Features")
+        st.markdown("""
+        - **Smart Extraction** - Automated component detection
+        - **Style Parsing** - Complete design token extraction
+        - **Image Resolution** - SVG and raster support
+        - **JSON Export** - Structured metadata output
+        """)
+        
+        st.markdown("---")
         st.markdown("### 📚 Resources")
         st.markdown("""
-        - [Figma API Documentation](https://www.figma.com/developers/api)
+        - [Figma API Docs](https://www.figma.com/developers/api)
         - [Angular Framework](https://angular.io)
-        - [ReportLab](https://www.reportlab.com)
+        - [Design Systems](https://www.designsystems.com)
         """)
+        
         st.markdown("---")
         st.markdown("### 🔐 Security")
-        st.info("API tokens are used only for fetching and are not persisted.")
+        st.info("🔒 Tokens are never stored. All processing is session-based.")
 
-    # Tabs
-    tab1, tab2 = st.tabs(["🎯 Figma Extraction", "⚡ Angular Processor"])
+    # Main Content
+    st.markdown("### 🎯 Component Extraction")
+    st.markdown("Extract UI components with complete metadata, styling information, and image assets from your Figma designs.")
+    st.markdown("---")
 
-    # --- Figma Extraction Tab ---
-    with tab1:
-        st.markdown("### Figma Component Extraction")
-        st.markdown("Extract UI components with metadata, styling, and images from Figma.")
-        st.markdown("---")
+    col1, col2 = st.columns(2)
+    with col1:
+        file_key = st.text_input(
+            "📁 Figma File Key", 
+            value="", 
+            help="Enter the file key from your Figma file URL (e.g., abc123xyz from figma.com/file/abc123xyz/...)",
+            placeholder="abc123xyz..."
+        )
+    with col2:
+        node_ids = st.text_input(
+            "🔗 Node IDs (Optional)", 
+            value="", 
+            help="Comma-separated node IDs to extract specific components. Leave empty to extract entire file.",
+            placeholder="123:456, 789:012"
+        )
 
-        col1, col2 = st.columns(2)
-        with col1:
-            file_key = st.text_input("📁 Figma File Key", value="", help="Figma file key (from file URL)")
-        with col2:
-            node_ids = st.text_input("🔗 Node IDs (comma-separated)", value="", help="Optional: comma-separated node ids")
+    token = st.text_input(
+        "🔑 Figma Personal Access Token", 
+        type="password", 
+        help="Generate a personal access token in your Figma account settings under 'Personal Access Tokens'",
+        placeholder="Enter your Figma token..."
+    )
 
-        token = st.text_input("🔑 Figma Personal Access Token", type="password", help="Generate in Figma account settings")
+    st.markdown("")  # Spacing
+    
+    if st.button("🚀 Extract UI Components", type="primary"):
+        if not token or not file_key:
+            st.error("⚠️ Please provide both a file key and a Figma access token to proceed.")
+        else:
+            try:
+                progress = st.progress(0)
+                status = st.empty()
 
-        if st.button("🚀 Extract UI Components"):
-            if not token or not file_key:
-                st.error("⚠️ Please provide a file key and a Figma access token.")
-            else:
-                try:
-                    progress = st.progress(0)
-                    status = st.empty()
+                status.text("📡 Connecting to Figma API...")
+                progress.progress(5)
+                nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
 
-                    status.text("📡 Fetching nodes from Figma API...")
-                    progress.progress(5)
-                    nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
+                status.text("🖼️ Analyzing component structure...")
+                progress.progress(25)
+                image_refs, node_id_list, node_meta = walk_nodes_collect_images_and_ids(nodes_payload)
 
-                    status.text("🖼️ Collecting images and node metadata...")
-                    progress.progress(25)
-                    image_refs, node_id_list, node_meta = walk_nodes_collect_images_and_ids(nodes_payload)
+                status.text("🔗 Resolving image assets...")
+                progress.progress(50)
+                filtered_fills, renders_map = resolve_image_urls(file_key, image_refs, node_id_list, token)
 
-                    status.text("🔗 Resolving image URLs from Figma...")
-                    progress.progress(50)
-                    filtered_fills, renders_map = resolve_image_urls(file_key, image_refs, node_id_list, token)
+                status.text("🎨 Processing design tokens...")
+                progress.progress(70)
+                node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
+                merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
 
-                    status.text("🎨 Building icon map and merging URLs into nodes...")
-                    progress.progress(70)
-                    node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
-                    merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
+                status.text("📦 Extracting components...")
+                progress.progress(85)
+                final_output = extract_ui_components(merged_payload)
 
-                    status.text("📦 Extracting structured components...")
-                    progress.progress(85)
-                    final_output = extract_ui_components(merged_payload)
+                status.text("✨ Finalizing extraction...")
+                progress.progress(95)
+                sanitized = remove_url_prefix_from_json(final_output, "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/")
+                st.session_state['metadata_json'] = sanitized
+                st.session_state['stats']['files_processed'] += 1
+                progress.progress(100)
+                status.empty()
+                st.success("✅ Extraction completed successfully!")
 
-                    status.text("✨ Finalizing extraction and sanitizing URLs...")
-                    progress.progress(95)
-                    # remove absolute prefix so output is portable; use default figma prefix commonly returned
-                    sanitized = remove_url_prefix_from_json(final_output, "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/")
-                    st.session_state['metadata_json'] = sanitized
-                    st.session_state['stats']['files_processed'] += 1
-                    progress.progress(100)
-                    st.success("✅ Extraction completed successfully!")
+                # Metrics Display
+                st.markdown("### 📊 Extraction Summary")
+                st.markdown("")
+                
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Total Components", sanitized['metadata']['totalComponents'])
+                with col2:
+                    st.metric("Text Elements", len(sanitized.get('textElements', [])))
+                with col3:
+                    st.metric("Buttons", len(sanitized.get('buttons', [])))
+                with col4:
+                    st.metric("Containers", len(sanitized.get('containers', [])))
 
-                    # Metrics display
-                    st.markdown("### 📊 Extraction Summary")
-                    col1, col2, col3, col4 = st.columns(4)
+                st.markdown("")
+                
+                # Additional metrics in expandable section
+                with st.expander("📋 Detailed Category Breakdown", expanded=True):
+                    col1, col2 = st.columns(2)
+                    
+                    categories = {
+                        'textElements': 'Text Elements',
+                        'buttons': 'Buttons',
+                        'inputs': 'Input Fields',
+                        'containers': 'Containers',
+                        'images': 'Images',
+                        'navigation': 'Navigation',
+                        'vectors': 'Vector Graphics',
+                        'other': 'Other Components'
+                    }
+                    
+                    items = list(categories.items())
+                    mid = len(items) // 2
+                    
                     with col1:
-                        st.metric("Total Components", sanitized['metadata']['totalComponents'])
-                    with col2:
-                        st.metric("Text Elements", len(sanitized.get('textElements', [])))
-                    with col3:
-                        st.metric("Buttons", len(sanitized.get('buttons', [])))
-                    with col4:
-                        st.metric("Containers", len(sanitized.get('containers', [])))
-
-                    with st.expander("📋 Category Breakdown"):
-                        for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']:
-                            count = len(sanitized.get(cat, []))
+                        for key, label in items[:mid]:
+                            count = len(sanitized.get(key, []))
                             if count > 0:
-                                st.markdown(f"- **{cat}**: `{count}`")
-                except Exception as e:
-                    st.error(f"❌ Error during extraction: {str(e)}")
-
-        # Downloads for extraction
-        if 'metadata_json' in st.session_state:
-            st.markdown("---")
-            st.markdown("### 💾 Download Extracted Data")
-            json_str = json.dumps(st.session_state['metadata_json'], indent=2, ensure_ascii=False)
-
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.download_button(
-                    "📥 Download metadata.json",
-                    data=json_str,
-                    file_name="metadata.json",
-                    mime="application/json",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1})
-                )
-            with col2:
-                st.caption(f"Size: {len(json_str):,} bytes")
-
-    # --- Angular Processor Tab (upload or paste) ---
-    with tab2:
-        st.markdown("### Angular Code Image URL Processor")
-        st.markdown("Upload a file or paste code, then automatically prefix UUID image IDs with a full URL.")
-        st.markdown("---")
-
-        url_prefix = st.text_input(
-            "🌐 URL Prefix",
-            value="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/",
-            help="This prefix will be added to all detected image UUIDs"
-        )
-
-        st.markdown("#### 📥 Choose Input Method")
-        input_method = st.radio(
-            "Select how you want to provide your code:",
-            options=["📤 Upload File", "📝 Paste Code"],
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-
-        code_text = ""
-        source_filename = "code"
-
-        if input_method == "📤 Upload File":
-            uploaded = st.file_uploader(
-                "📤 Upload Angular Code File",
-                type=['txt', 'md', 'html', 'ts', 'js', 'css', 'scss', 'json'],
-                help="Supported formats: .txt, .md, .html, .ts, .js, .css, .scss, .json"
-            )
-
-            if uploaded:
-                st.info(f"✅ File uploaded: **{uploaded.name}**")
-                try:
-                    raw = uploaded.read()
-                    code_text = decode_bytes_to_text(raw)
-                    source_filename = uploaded.name.rsplit('.', 1)[0] if '.' in uploaded.name else uploaded.name
-                except Exception as e:
-                    st.error(f"❌ Error reading file: {str(e)}")
-        else:
-            code_text = st.text_area(
-                "📝 Paste Your Angular Code Here",
-                height=320,
-                placeholder="Paste your TypeScript / HTML / CSS code here...",
-                help="Once you paste code here, the Process button will be enabled below."
-            )
-            source_filename = "pasted_code"
-
-        # Show Process button only when there is some code (paste-detected or file content)
-        if code_text and code_text.strip():
-            if st.button("⚡ Process Angular Code", type="primary"):
-                try:
-                    uuids = detect_uuids_in_text(code_text)
-                    modified, replaced = add_url_prefix_to_angular_code(code_text, url_prefix)
-
-                    st.session_state['angular_output'] = modified
-                    st.session_state['angular_filename'] = source_filename
-                    st.session_state['stats']['files_processed'] += 1
-
-                    st.success("✅ Angular code processed successfully!")
-
-                    # Processing metrics
-                    st.markdown("### 📊 Processing Summary")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Image IDs Found", len(uuids))
+                                st.markdown(f"**{label}:** `{count}` components")
+                    
                     with col2:
-                        st.metric("Replacements Made", replaced)
-                    with col3:
-                        st.metric("Output Size", f"{len(modified):,} bytes")
+                        for key, label in items[mid:]:
+                            count = len(sanitized.get(key, []))
+                            if count > 0:
+                                st.markdown(f"**{label}:** `{count}` components")
 
-                    if len(uuids) > 0:
-                        with st.expander("🔍 Sample Transformation"):
-                            sample = uuids[0]
-                            st.code(f"Before: {sample}", language="text")
-                            st.code(f"After: {url_prefix}{sample}", language="text")
-                except Exception as e:
-                    st.error(f"❌ Error processing code: {str(e)}")
-        else:
-            st.info("Paste some code or upload a file to enable the processor.")
+            except Exception as e:
+                st.error(f"❌ Extraction failed: {str(e)}")
+                st.info("💡 Make sure your token is valid and you have access to the specified file.")
 
-        # Downloads for angular output
-        if 'angular_output' in st.session_state:
-            st.markdown("---")
-            st.markdown("### 💾 Download / Copy Processed Code")
-            base = st.session_state['angular_filename']
-            if '.' in base:
-                base = base.rsplit('.', 1)[0]
+    # Download Section
+    if 'metadata_json' in st.session_state:
+        st.markdown("---")
+        st.markdown("### 💾 Export Options")
+        st.markdown("Download the extracted component metadata in JSON format.")
+        st.markdown("")
+        
+        json_str = json.dumps(st.session_state['metadata_json'], indent=2, ensure_ascii=False)
 
-            # Pretty code block for direct copy (indentation preserved)
-            st.markdown("#### 💻 View & Copy Code")
-            st.code(st.session_state['angular_output'], language="typescript")
+        col1, col2, col3 = st.columns([2, 1, 1])
+        with col1:
+            st.download_button(
+                "📥 Download metadata.json",
+                data=json_str,
+                file_name="metadata.json",
+                mime="application/json",
+                on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
+                use_container_width=True
+            )
+        with col2:
+            st.metric("File Size", f"{len(json_str):,} bytes")
+        with col3:
+            st.metric("Format", "JSON")
 
-            with st.expander("📋 Raw Output (select & copy)", expanded=False):
-                st.text_area(
-                    "Processed Code",
-                    value=st.session_state['angular_output'],
-                    height=380,
-                    label_visibility="collapsed",
-                    help="Select all and copy from here; indentation is preserved."
-                )
-
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.download_button(
-                    "📄 .txt",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.txt",
-                    mime="text/plain",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col2:
-                st.download_button(
-                    "📝 .md",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.md",
-                    mime="text/markdown",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col3:
-                st.download_button(
-                    "💻 .ts",
-                    data=st.session_state['angular_output'],
-                    file_name=f"{base}_modified.ts",
-                    mime="text/typescript",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
-            with col4:
-                pdf_buf = create_text_to_pdf(st.session_state['angular_output'])
-                st.download_button(
-                    "📕 .pdf",
-                    data=pdf_buf,
-                    file_name=f"{base}_modified.pdf",
-                    mime="application/pdf",
-                    on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
-                    use_container_width=True
-                )
+        # Preview Section
+        with st.expander("👁️ Preview JSON Structure", expanded=False):
+            st.json(st.session_state['metadata_json']['metadata'])
 
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; padding: 1.5rem 0; color: #6B7280;'>
-        <p style='margin: 0; font-size: 0.9rem;'>Built with ❤️ using <strong>Streamlit</strong> | Professional Edition</p>
+    <div style='text-align: center; padding: 2rem 0 1rem 0;'>
+        <p style='color: #6B7280; font-size: 0.95rem; margin: 0;'>
+            Built with ❤️ using <strong>Streamlit</strong> • Professional Edition v1.0
+        </p>
+        <p style='color: #4B5563; font-size: 0.85rem; margin-top: 0.5rem;'>
+            Powered by Figma API • Optimized for Angular Development
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
