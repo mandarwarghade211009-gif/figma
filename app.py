@@ -14,310 +14,461 @@ from typing import Any, Dict, List, Set, Tuple, Optional
 import copy
 
 # -----------------------------------------------------
-# PROFESSIONAL THEMING - Modern SaaS Design
+# STUNNING PROFESSIONAL THEMING - Ultra Modern Design
 # -----------------------------------------------------
 def apply_professional_styling():
-    """Apply modern, professional gradient-based theme"""
+    """Apply stunning, eye-catching professional theme with perfect text visibility"""
     st.markdown("""
     <style>
-    /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    /* Import Beautiful Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
     
-    /* Root Variables - Modern Purple/Blue Gradient Theme */
+    /* Root Variables - Vibrant Modern Theme with Perfect Contrast */
     :root {
         --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --accent-color: #667eea;
-        --accent-hover: #764ba2;
-        --dark-bg: #0f0f23;
-        --card-bg: #1a1a2e;
+        --gold-gradient: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        --purple-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        --cosmic-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        
+        --accent-primary: #667eea;
+        --accent-secondary: #f5576c;
+        --accent-success: #00f2fe;
+        
+        --dark-bg: #0a0a1f;
+        --card-bg: #1a1a35;
+        --card-hover: #252542;
+        
         --text-primary: #ffffff;
-        --text-secondary: #a0a0c0;
-        --border-color: rgba(102, 126, 234, 0.2);
-        --shadow-lg: 0 20px 60px rgba(102, 126, 234, 0.15);
-        --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
+        --text-secondary: #e0e0ff;
+        --text-muted: #b0b0d0;
+        
+        --border-color: rgba(102, 126, 234, 0.3);
+        --border-hover: rgba(102, 126, 234, 0.6);
+        
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+        --shadow-lg: 0 20px 60px rgba(102, 126, 234, 0.2);
+        --shadow-glow: 0 0 40px rgba(102, 126, 234, 0.3);
     }
     
     /* Global Styling */
     .stApp {
-        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, #0a0a1f 0%, #1a1a35 25%, #2d1b4e 50%, #1a1a35 75%, #0a0a1f 100%);
+        background-attachment: fixed;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
         color: var(--text-primary);
+    }
+    
+    /* Animated Background Pattern */
+    .stApp::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+            radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(245, 87, 108, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 40% 20%, rgba(0, 242, 254, 0.06) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
     }
     
     /* Hide Streamlit Branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    .stDeployButton {display: none;}
     
-    /* Custom Header Styling */
-    h1, h2, h3, h4, h5, h6 {
-        font-family: 'Inter', sans-serif;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        background: linear-gradient(135deg, #667eea 0%, #f5576c 100%);
+    /* Headers - Eye-Catching with Perfect Visibility */
+    h1 {
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 4rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.03em !important;
+        margin-bottom: 1rem !important;
+        line-height: 1.1 !important;
+        background: linear-gradient(135deg, #ffffff 0%, #a8edea 50%, #fed6e3 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        text-shadow: 0 0 80px rgba(102, 126, 234, 0.5);
+        animation: gradient-shift 8s ease infinite;
     }
     
-    h1 {
-        font-size: 3.5rem !important;
-        margin-bottom: 0.5rem !important;
-        line-height: 1.2;
+    @keyframes gradient-shift {
+        0%, 100% { filter: hue-rotate(0deg); }
+        50% { filter: hue-rotate(20deg); }
     }
     
     h2 {
-        font-size: 2rem !important;
-        margin-top: 2rem !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 2.2rem !important;
+        font-weight: 700 !important;
+        margin-top: 2.5rem !important;
+        margin-bottom: 1.2rem !important;
+        color: #ffffff !important;
+        text-shadow: 0 2px 20px rgba(102, 126, 234, 0.4);
     }
     
     h3 {
-        font-size: 1.5rem !important;
-        font-weight: 600;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 1.6rem !important;
+        font-weight: 600 !important;
+        color: #e0e0ff !important;
+        margin-top: 1.5rem !important;
+        margin-bottom: 1rem !important;
     }
     
-    /* Paragraph & Text */
-    p, .stMarkdown {
-        color: var(--text-secondary);
-        font-size: 1.05rem;
-        line-height: 1.7;
-        font-weight: 400;
+    /* Paragraph & Text - High Contrast */
+    p, .stMarkdown, span, div {
+        color: var(--text-secondary) !important;
+        font-size: 1.05rem !important;
+        line-height: 1.8 !important;
+        font-weight: 400 !important;
     }
     
-    /* Cards & Containers */
-    .stTabs, .element-container, div[data-testid="stExpander"] {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow-md);
-        backdrop-filter: blur(10px);
+    strong, b {
+        color: #ffffff !important;
+        font-weight: 600 !important;
     }
     
-    /* Tab Styling */
+    /* Glass Card Effect */
+    .element-container, div[data-testid="stExpander"], .stAlert {
+        background: rgba(26, 26, 53, 0.7) !important;
+        backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(102, 126, 234, 0.3) !important;
+        border-radius: 20px !important;
+        padding: 1.8rem !important;
+        box-shadow: var(--shadow-md) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    .element-container:hover {
+        border-color: rgba(102, 126, 234, 0.6) !important;
+        box-shadow: var(--shadow-lg) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    /* Tab Styling - Modern & Beautiful */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 1rem;
+        gap: 1.5rem;
         background: transparent;
-        border-bottom: 2px solid var(--border-color);
+        border-bottom: 2px solid rgba(102, 126, 234, 0.2);
         padding-bottom: 0;
+        margin-bottom: 2rem;
     }
     
     .stTabs [data-baseweb="tab"] {
-        background: transparent;
-        border: none;
-        color: var(--text-secondary);
-        font-weight: 600;
-        font-size: 1.1rem;
-        padding: 1rem 2rem;
-        border-radius: 12px 12px 0 0;
-        transition: all 0.3s ease;
+        background: rgba(26, 26, 53, 0.5) !important;
+        border: 2px solid rgba(102, 126, 234, 0.2) !important;
+        color: var(--text-secondary) !important;
+        font-weight: 600 !important;
+        font-size: 1.15rem !important;
+        padding: 1.2rem 2.5rem !important;
+        border-radius: 16px 16px 0 0 !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(102, 126, 234, 0.2) !important;
+        border-color: rgba(102, 126, 234, 0.5) !important;
+        color: #ffffff !important;
     }
     
     .stTabs [aria-selected="true"] {
-        background: var(--primary-gradient);
-        color: white;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        background: var(--cosmic-gradient) !important;
+        border-color: transparent !important;
+        color: #ffffff !important;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5), 0 0 40px rgba(102, 126, 234, 0.3) !important;
+        transform: translateY(-4px) !important;
     }
     
-    /* Input Fields */
+    /* Input Fields - High Visibility */
     .stTextInput > div > div > input,
-    .stTextArea textarea {
-        background: rgba(26, 26, 46, 0.6) !important;
-        border: 2px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        color: var(--text-primary) !important;
-        font-size: 1rem !important;
-        padding: 0.75rem 1rem !important;
+    .stTextArea textarea,
+    .stSelectbox select {
+        background: rgba(26, 26, 53, 0.9) !important;
+        border: 2px solid rgba(102, 126, 234, 0.4) !important;
+        border-radius: 14px !important;
+        color: #ffffff !important;
+        font-size: 1.05rem !important;
+        padding: 1rem 1.5rem !important;
         transition: all 0.3s ease !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'Poppins', sans-serif !important;
+        font-weight: 500 !important;
+    }
+    
+    .stTextInput > div > div > input::placeholder,
+    .stTextArea textarea::placeholder {
+        color: var(--text-muted) !important;
+        opacity: 0.7 !important;
     }
     
     .stTextInput > div > div > input:focus,
     .stTextArea textarea:focus {
-        border-color: var(--accent-color) !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        border-color: var(--accent-primary) !important;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.25), 0 8px 24px rgba(102, 126, 234, 0.3) !important;
         outline: none !important;
+        background: rgba(26, 26, 53, 1) !important;
+        transform: translateY(-2px) !important;
     }
     
-    /* Buttons */
-    .stButton > button {
-        background: var(--primary-gradient) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 0.75rem 2rem !important;
+    /* Labels - Perfect Visibility */
+    label, .stMarkdown label {
+        color: #ffffff !important;
         font-weight: 600 !important;
-        font-size: 1.05rem !important;
+        font-size: 1rem !important;
+        margin-bottom: 0.5rem !important;
+        display: block !important;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Buttons - Eye-Catching Primary */
+    .stButton > button {
+        background: var(--cosmic-gradient) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 14px !important;
+        padding: 1rem 3rem !important;
+        font-weight: 700 !important;
+        font-size: 1.15rem !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 40px rgba(102, 126, 234, 0.2) !important;
         text-transform: none !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        letter-spacing: 0.02em !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    .stButton > button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .stButton > button:hover::before {
+        width: 300px;
+        height: 300px;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5) !important;
+        transform: translateY(-4px) scale(1.02) !important;
+        box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6), 0 0 60px rgba(102, 126, 234, 0.4) !important;
     }
     
     .stButton > button:active {
-        transform: translateY(0);
+        transform: translateY(-2px) scale(0.98) !important;
     }
     
-    /* Download Buttons */
+    /* Download Buttons - Beautiful Variants */
     .stDownloadButton > button {
         background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
-        color: white !important;
+        color: #ffffff !important;
         border: none !important;
-        border-radius: 10px !important;
-        padding: 0.6rem 1.5rem !important;
+        border-radius: 12px !important;
+        padding: 0.85rem 2rem !important;
         font-weight: 600 !important;
-        font-size: 0.95rem !important;
+        font-size: 1rem !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3) !important;
+        box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4) !important;
+        font-family: 'Space Grotesk', sans-serif !important;
     }
     
     .stDownloadButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.5) !important;
+        transform: translateY(-3px) scale(1.05) !important;
+        box-shadow: 0 10px 30px rgba(79, 172, 254, 0.6) !important;
     }
     
-    /* Metrics */
+    /* Metrics - Stunning Display */
     [data-testid="stMetricValue"] {
-        font-size: 2rem !important;
-        font-weight: 700 !important;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        font-size: 2.5rem !important;
+        font-weight: 800 !important;
+        background: linear-gradient(135deg, #ffffff 0%, #a8edea 100%);
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
     }
     
     [data-testid="stMetricLabel"] {
-        color: var(--text-secondary) !important;
-        font-size: 0.9rem !important;
+        color: #ffffff !important;
+        font-size: 0.95rem !important;
         font-weight: 600 !important;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        text-transform: uppercase !important;
+        letter-spacing: 0.1em !important;
+        opacity: 0.9 !important;
     }
     
-    /* Progress Bar */
+    div[data-testid="metric-container"] {
+        background: rgba(26, 26, 53, 0.6) !important;
+        border: 1px solid rgba(102, 126, 234, 0.3) !important;
+        border-radius: 16px !important;
+        padding: 1.5rem !important;
+        box-shadow: var(--shadow-md) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    div[data-testid="metric-container"]:hover {
+        border-color: rgba(102, 126, 234, 0.6) !important;
+        box-shadow: var(--shadow-lg) !important;
+        transform: translateY(-4px) !important;
+    }
+    
+    /* Progress Bar - Vibrant */
     .stProgress > div > div > div > div {
-        background: var(--primary-gradient) !important;
-        border-radius: 10px;
+        background: var(--cosmic-gradient) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.5) !important;
     }
     
     .stProgress > div > div {
         background: rgba(102, 126, 234, 0.2) !important;
-        border-radius: 10px;
-    }
-    
-    /* Alert Boxes */
-    .stAlert {
-        background: rgba(26, 26, 46, 0.8) !important;
-        border-left: 4px solid var(--accent-color) !important;
         border-radius: 12px !important;
-        padding: 1rem 1.5rem !important;
-        color: var(--text-primary) !important;
+        height: 12px !important;
     }
     
+    /* Alert Boxes - High Visibility */
     .stSuccess {
-        border-left-color: #00f2fe !important;
+        background: rgba(0, 242, 254, 0.15) !important;
+        border-left: 5px solid #00f2fe !important;
+        border-radius: 14px !important;
+        padding: 1.2rem 1.8rem !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 16px rgba(0, 242, 254, 0.3) !important;
     }
     
     .stError {
-        border-left-color: #f5576c !important;
+        background: rgba(245, 87, 108, 0.15) !important;
+        border-left: 5px solid #f5576c !important;
+        border-radius: 14px !important;
+        padding: 1.2rem 1.8rem !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 16px rgba(245, 87, 108, 0.3) !important;
     }
     
     .stInfo {
-        border-left-color: #4facfe !important;
+        background: rgba(102, 126, 234, 0.15) !important;
+        border-left: 5px solid #667eea !important;
+        border-radius: 14px !important;
+        padding: 1.2rem 1.8rem !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
     }
     
-    /* Sidebar */
+    .stWarning {
+        background: rgba(246, 211, 101, 0.15) !important;
+        border-left: 5px solid #f6d365 !important;
+        border-radius: 14px !important;
+        padding: 1.2rem 1.8rem !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 16px rgba(246, 211, 101, 0.3) !important;
+    }
+    
+    /* Sidebar - Modern Glass Effect */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-        border-right: 1px solid var(--border-color);
+        background: linear-gradient(180deg, rgba(26, 26, 53, 0.95) 0%, rgba(22, 22, 46, 0.95) 100%) !important;
+        backdrop-filter: blur(20px) !important;
+        border-right: 1px solid rgba(102, 126, 234, 0.3) !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    [data-testid="stSidebar"] h3 {
+        color: #ffffff !important;
+        font-size: 1.4rem !important;
     }
     
     [data-testid="stSidebar"] .stMarkdown {
-        color: var(--text-secondary);
+        color: var(--text-secondary) !important;
     }
     
-    /* Code Blocks */
-    .stCodeBlock, code {
-        background: rgba(15, 15, 35, 0.8) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 10px !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        color: #a0a0c0 !important;
-    }
-    
-    /* Expander */
-    .streamlit-expanderHeader {
-        background: rgba(26, 26, 46, 0.6) !important;
+    /* Code Blocks - Beautiful Contrast */
+    .stCodeBlock, code, pre {
+        background: rgba(15, 15, 35, 0.95) !important;
+        border: 1px solid rgba(102, 126, 234, 0.3) !important;
         border-radius: 12px !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        color: #e0e0ff !important;
+        padding: 1rem !important;
+        box-shadow: var(--shadow-md) !important;
+    }
+    
+    /* Expander - Eye-Catching */
+    .streamlit-expanderHeader {
+        background: rgba(26, 26, 53, 0.8) !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: 14px !important;
         font-weight: 600 !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-color) !important;
+        color: #ffffff !important;
+        border: 2px solid rgba(102, 126, 234, 0.3) !important;
+        padding: 1rem 1.5rem !important;
+        transition: all 0.3s ease !important;
+        font-size: 1.05rem !important;
     }
     
     .streamlit-expanderHeader:hover {
-        background: rgba(102, 126, 234, 0.1) !important;
-        border-color: var(--accent-color) !important;
+        background: rgba(102, 126, 234, 0.2) !important;
+        border-color: rgba(102, 126, 234, 0.6) !important;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
+        transform: translateX(4px) !important;
     }
     
-    /* Divider */
+    /* Divider - Elegant */
     hr {
-        border: none;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--border-color), transparent);
-        margin: 2rem 0;
+        border: none !important;
+        height: 2px !important;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent) !important;
+        margin: 3rem 0 !important;
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.3) !important;
     }
     
-    /* Radio Buttons */
-    .stRadio > label {
-        color: var(--text-primary) !important;
-        font-weight: 600 !important;
+    /* Caption Text - Visible */
+    .caption, small, [data-testid="stCaptionContainer"] {
+        color: var(--text-muted) !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
     }
     
-    /* File Uploader */
-    [data-testid="stFileUploader"] {
-        background: rgba(26, 26, 46, 0.6);
-        border: 2px dashed var(--border-color);
-        border-radius: 16px;
-        padding: 2rem;
-        transition: all 0.3s ease;
-    }
-    
-    [data-testid="stFileUploader"]:hover {
-        border-color: var(--accent-color);
-        background: rgba(102, 126, 234, 0.05);
-    }
-    
-    /* Scrollbar */
+    /* Scrollbar - Beautiful */
     ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
     }
     
     ::-webkit-scrollbar-track {
-        background: var(--dark-bg);
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: var(--primary-gradient);
+        background: rgba(10, 10, 31, 0.5);
         border-radius: 10px;
     }
     
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--accent-hover);
+    ::-webkit-scrollbar-thumb {
+        background: var(--cosmic-gradient);
+        border-radius: 10px;
+        border: 2px solid rgba(10, 10, 31, 0.5);
     }
     
-    /* Custom Animation */
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #f093fb 100%);
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    }
+    
+    /* Animations */
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px);
         }
         to {
             opacity: 1;
@@ -325,31 +476,40 @@ def apply_professional_styling():
         }
     }
     
+    @keyframes pulse-glow {
+        0%, 100% {
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 40px rgba(102, 126, 234, 0.6);
+        }
+    }
+    
     .element-container {
         animation: fadeInUp 0.6s ease-out;
     }
     
-    /* Glassmorphism Effect */
-    .glass-card {
-        background: rgba(26, 26, 46, 0.4);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(102, 126, 234, 0.2);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    /* Column Alignment */
+    [data-testid="column"] {
+        padding: 0.5rem;
     }
     
-    /* Labels */
-    label {
-        color: var(--text-primary) !important;
-        font-weight: 600 !important;
-        font-size: 0.95rem !important;
-    }
-    
-    /* Caption */
-    .caption, small {
+    /* Status Text - High Contrast */
+    .stText, .stMarkdown p {
         color: var(--text-secondary) !important;
-        font-size: 0.85rem !important;
+    }
+    
+    /* Helper Text */
+    [data-testid="stFormHelperText"] {
+        color: var(--text-muted) !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Make all text clearly visible */
+    * {
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -842,20 +1002,20 @@ def remove_url_prefix_from_json(payload: Dict[str, Any], url_prefix: str) -> Dic
 # -------------------------
 
 def main():
-    # Hero Header with Gradient
+    # Stunning Hero Header with Badge
     st.markdown("""
-    <div style='text-align: center; padding: 3rem 0 2rem 0;'>
-        <div style='display: inline-block; padding: 0.5rem 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); border-radius: 50px; border: 1px solid rgba(102, 126, 234, 0.3); margin-bottom: 1.5rem;'>
-            <span style='font-size: 0.9rem; font-weight: 600; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em;'>✨ Enterprise Edition</span>
+    <div style='text-align: center; padding: 3.5rem 0 3rem 0;'>
+        <div style='display: inline-block; padding: 0.6rem 2rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.25) 100%); border-radius: 50px; border: 2px solid rgba(102, 126, 234, 0.4); margin-bottom: 1.8rem; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);'>
+            <span style='font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 0.15em;'>✨ Professional Edition 2025</span>
         </div>
-        <h1 style='margin-bottom: 0.8rem; font-size: 3.5rem;'>🎨 Figma UI Extractor</h1>
-        <p style='font-size: 1.2rem; color: #a0a0c0; font-weight: 400; max-width: 700px; margin: 0 auto; line-height: 1.6;'>
-            Extract, analyze, and export UI components from Figma with precision and elegance
+        <h1 style='margin-bottom: 1rem; font-size: 4rem; line-height: 1.1;'>🎨 Figma UI Extractor</h1>
+        <p style='font-size: 1.3rem; color: #e0e0ff; font-weight: 400; max-width: 800px; margin: 0 auto; line-height: 1.7; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);'>
+            Extract, analyze, and export UI components from Figma with enterprise-grade precision and style
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Sidebar
+    # Modern Sidebar
     with st.sidebar:
         st.markdown("### ⚙️ Dashboard")
         st.markdown("---")
@@ -865,132 +1025,141 @@ def main():
 
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Files", st.session_state['stats']['files_processed'])
+            st.metric("🗂️ Files", st.session_state['stats']['files_processed'])
         with col2:
-            st.metric("Downloads", st.session_state['stats']['downloads'])
+            st.metric("📥 Downloads", st.session_state['stats']['downloads'])
 
         st.markdown("---")
-        st.markdown("### 🎯 Features")
+        st.markdown("### 🎯 Key Features")
         st.markdown("""
-        - **Smart Extraction** - Automated component detection
-        - **Style Parsing** - Complete design token extraction
-        - **Image Resolution** - SVG and raster support
-        - **JSON Export** - Structured metadata output
+        **Smart Extraction**  
+        Automated component detection with AI
+        
+        **Complete Styling**  
+        Design tokens, colors, and typography
+        
+        **Image Support**  
+        SVG and raster asset resolution
+        
+        **Structured Export**  
+        Clean JSON metadata output
         """)
         
         st.markdown("---")
-        st.markdown("### 📚 Resources")
+        st.markdown("### 📚 Documentation")
         st.markdown("""
-        - [Figma API Docs](https://www.figma.com/developers/api)
-        - [Angular Framework](https://angular.io)
-        - [Design Systems](https://www.designsystems.com)
+        - [📖 Figma API Guide](https://www.figma.com/developers/api)
+        - [⚡ Angular Docs](https://angular.io)
+        - [🎨 Design Systems](https://www.designsystems.com)
         """)
         
         st.markdown("---")
-        st.markdown("### 🔐 Security")
-        st.info("🔒 Tokens are never stored. All processing is session-based.")
+        st.markdown("### 🔐 Privacy & Security")
+        st.success("🔒 **100% Secure** - Tokens are never stored. All processing is session-based and encrypted.")
 
-    # Main Content
-    st.markdown("### 🎯 Component Extraction")
-    st.markdown("Extract UI components with complete metadata, styling information, and image assets from your Figma designs.")
+    # Main Content Area
+    st.markdown("## 🎯 Component Extraction")
+    st.markdown("Extract comprehensive UI component metadata including styles, layouts, typography, and image assets from your Figma designs with a single click.")
     st.markdown("---")
 
+    # Input Fields in Columns
     col1, col2 = st.columns(2)
     with col1:
         file_key = st.text_input(
             "📁 Figma File Key", 
             value="", 
-            help="Enter the file key from your Figma file URL (e.g., abc123xyz from figma.com/file/abc123xyz/...)",
-            placeholder="abc123xyz..."
+            help="Enter the file key from your Figma file URL (found after 'file/' in the URL)",
+            placeholder="e.g., abc123xyz..."
         )
     with col2:
         node_ids = st.text_input(
             "🔗 Node IDs (Optional)", 
             value="", 
-            help="Comma-separated node IDs to extract specific components. Leave empty to extract entire file.",
-            placeholder="123:456, 789:012"
+            help="Enter comma-separated node IDs to extract specific components. Leave empty to extract the entire file.",
+            placeholder="e.g., 123:456, 789:012"
         )
 
     token = st.text_input(
         "🔑 Figma Personal Access Token", 
         type="password", 
-        help="Generate a personal access token in your Figma account settings under 'Personal Access Tokens'",
-        placeholder="Enter your Figma token..."
+        help="Generate a personal access token in your Figma account settings → Security → Personal Access Tokens",
+        placeholder="figd_..."
     )
 
     st.markdown("")  # Spacing
     
+    # Extract Button
     if st.button("🚀 Extract UI Components", type="primary"):
         if not token or not file_key:
-            st.error("⚠️ Please provide both a file key and a Figma access token to proceed.")
+            st.error("⚠️ **Missing Required Fields** - Please provide both a Figma file key and access token to proceed.")
         else:
             try:
                 progress = st.progress(0)
                 status = st.empty()
 
-                status.text("📡 Connecting to Figma API...")
+                status.text("📡 Establishing connection to Figma API...")
                 progress.progress(5)
                 nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
 
-                status.text("🖼️ Analyzing component structure...")
+                status.text("🖼️ Analyzing component structure and hierarchy...")
                 progress.progress(25)
                 image_refs, node_id_list, node_meta = walk_nodes_collect_images_and_ids(nodes_payload)
 
-                status.text("🔗 Resolving image assets...")
+                status.text("🔗 Resolving image assets and references...")
                 progress.progress(50)
                 filtered_fills, renders_map = resolve_image_urls(file_key, image_refs, node_id_list, token)
 
-                status.text("🎨 Processing design tokens...")
+                status.text("🎨 Processing design tokens and styles...")
                 progress.progress(70)
                 node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
                 merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
 
-                status.text("📦 Extracting components...")
+                status.text("📦 Extracting components and metadata...")
                 progress.progress(85)
                 final_output = extract_ui_components(merged_payload)
 
-                status.text("✨ Finalizing extraction...")
+                status.text("✨ Finalizing extraction and optimizing output...")
                 progress.progress(95)
                 sanitized = remove_url_prefix_from_json(final_output, "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/")
                 st.session_state['metadata_json'] = sanitized
                 st.session_state['stats']['files_processed'] += 1
                 progress.progress(100)
                 status.empty()
-                st.success("✅ Extraction completed successfully!")
+                st.success("✅ **Extraction Completed Successfully!** Your UI components have been extracted and are ready for download.")
 
-                # Metrics Display
-                st.markdown("### 📊 Extraction Summary")
+                # Beautiful Metrics Display
+                st.markdown("## 📊 Extraction Summary")
                 st.markdown("")
                 
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Total Components", sanitized['metadata']['totalComponents'])
+                    st.metric("🎯 Total Components", sanitized['metadata']['totalComponents'])
                 with col2:
-                    st.metric("Text Elements", len(sanitized.get('textElements', [])))
+                    st.metric("📝 Text Elements", len(sanitized.get('textElements', [])))
                 with col3:
-                    st.metric("Buttons", len(sanitized.get('buttons', [])))
+                    st.metric("🔘 Buttons", len(sanitized.get('buttons', [])))
                 with col4:
-                    st.metric("Containers", len(sanitized.get('containers', [])))
+                    st.metric("📦 Containers", len(sanitized.get('containers', [])))
 
                 st.markdown("")
                 
-                # Additional metrics in expandable section
-                with st.expander("📋 Detailed Category Breakdown", expanded=True):
+                # Detailed Category Breakdown
+                with st.expander("📋 **Detailed Category Breakdown**", expanded=True):
                     col1, col2 = st.columns(2)
                     
                     categories = {
-                        'textElements': 'Text Elements',
-                        'buttons': 'Buttons',
-                        'inputs': 'Input Fields',
-                        'containers': 'Containers',
-                        'images': 'Images',
-                        'navigation': 'Navigation',
-                        'vectors': 'Vector Graphics',
-                        'other': 'Other Components'
+                        'textElements': '📝 Text Elements',
+                        'buttons': '🔘 Buttons',
+                        'inputs': '⌨️ Input Fields',
+                        'containers': '📦 Containers',
+                        'images': '🖼️ Images',
+                        'navigation': '🧭 Navigation',
+                        'vectors': '🎨 Vector Graphics',
+                        'other': '📌 Other Components'
                     }
                     
                     items = list(categories.items())
-                    mid = len(items) // 2
+                    mid = (len(items) + 1) // 2
                     
                     with col1:
                         for key, label in items[:mid]:
@@ -1005,46 +1174,49 @@ def main():
                                 st.markdown(f"**{label}:** `{count}` components")
 
             except Exception as e:
-                st.error(f"❌ Extraction failed: {str(e)}")
-                st.info("💡 Make sure your token is valid and you have access to the specified file.")
+                st.error(f"❌ **Extraction Failed:** {str(e)}")
+                st.info("💡 **Troubleshooting Tips:**\n- Verify your access token is valid and active\n- Ensure you have permission to access the specified file\n- Check that the file key is correct")
 
     # Download Section
     if 'metadata_json' in st.session_state:
         st.markdown("---")
-        st.markdown("### 💾 Export Options")
-        st.markdown("Download the extracted component metadata in JSON format.")
+        st.markdown("## 💾 Download Options")
+        st.markdown("Download your extracted component metadata in JSON format for seamless integration with your development workflow.")
         st.markdown("")
         
         json_str = json.dumps(st.session_state['metadata_json'], indent=2, ensure_ascii=False)
 
-        col1, col2, col3 = st.columns([2, 1, 1])
+        col1, col2, col3 = st.columns([3, 1, 1])
         with col1:
             st.download_button(
                 "📥 Download metadata.json",
                 data=json_str,
-                file_name="metadata.json",
+                file_name="figma-metadata.json",
                 mime="application/json",
                 on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
                 use_container_width=True
             )
         with col2:
-            st.metric("File Size", f"{len(json_str):,} bytes")
+            st.metric("📊 Size", f"{len(json_str):,}B")
         with col3:
-            st.metric("Format", "JSON")
+            st.metric("📄 Format", "JSON")
 
         # Preview Section
-        with st.expander("👁️ Preview JSON Structure", expanded=False):
+        with st.expander("👁️ **Preview JSON Structure**", expanded=False):
             st.json(st.session_state['metadata_json']['metadata'])
 
-    # Footer
+    # Beautiful Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; padding: 2rem 0 1rem 0;'>
-        <p style='color: #6B7280; font-size: 0.95rem; margin: 0;'>
-            Built with ❤️ using <strong>Streamlit</strong> • Professional Edition v1.0
+    <div style='text-align: center; padding: 2.5rem 0 1.5rem 0;'>
+        <p style='color: #e0e0ff; font-size: 1.05rem; margin: 0; font-weight: 500;'>
+            Built with ❤️ using <strong style='background: linear-gradient(135deg, #667eea 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>Streamlit</strong> • Professional Edition v2.0
         </p>
-        <p style='color: #4B5563; font-size: 0.85rem; margin-top: 0.5rem;'>
-            Powered by Figma API • Optimized for Angular Development
+        <p style='color: #b0b0d0; font-size: 0.95rem; margin-top: 0.8rem;'>
+            🚀 Powered by Figma API • Optimized for Angular & React Development
+        </p>
+        <p style='color: #8080a0; font-size: 0.85rem; margin-top: 0.5rem;'>
+            © 2025 Figma UI Extractor. All rights reserved.
         </p>
     </div>
     """, unsafe_allow_html=True)
