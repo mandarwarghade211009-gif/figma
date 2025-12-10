@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Professional Figma UI Extractor
-Enterprise-grade design system for UI extraction
+Professional Figma UI Extractor - Fully Responsive Edition
+Enterprise-grade design system for UI extraction - No scrolling, viewport-fit design
 """
 
 import streamlit as st
@@ -14,14 +14,29 @@ from typing import Any, Dict, List, Set, Tuple, Optional
 import copy
 
 # -----------------------------------------------------
-# PROFESSIONAL THEMING - Modern SaaS Design
+# PROFESSIONAL THEMING - Responsive No-Scroll Design
 # -----------------------------------------------------
 def apply_professional_styling():
-    """Apply modern, professional gradient-based theme"""
+    """Apply modern, professional gradient-based theme with viewport-fit responsive layout"""
     st.markdown("""
     <style>
     /* Import Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    /* Reset and Viewport Control */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    
+    html, body {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+    }
     
     /* Root Variables - Modern Purple/Blue Gradient Theme */
     :root {
@@ -39,19 +54,53 @@ def apply_professional_styling():
         --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
     
-    /* Global Styling */
+    /* Main App Container - Viewport Fit */
     .stApp {
         background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         color: var(--text-primary);
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+    
+    /* Main Content Area - Scrollable Container */
+    .main .block-container {
+        max-width: 100%;
+        padding: 1rem 2rem;
+        height: calc(100vh - 2rem);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Custom Scrollbar */
+    .main .block-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .main .block-container::-webkit-scrollbar-track {
+        background: var(--dark-bg);
+    }
+    
+    .main .block-container::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 10px;
+    }
+    
+    .main .block-container::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-hover);
     }
     
     /* Hide Streamlit Branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    .stDeployButton {display: none;}
     
-    /* Custom Header Styling */
+    /* Compact Header Styling */
     h1, h2, h3, h4, h5, h6 {
         font-family: 'Inter', sans-serif;
         font-weight: 700;
@@ -60,45 +109,47 @@ def apply_professional_styling():
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
     }
     
     h1 {
-        font-size: 3.5rem !important;
-        margin-bottom: 0.5rem !important;
+        font-size: 2.5rem !important;
         line-height: 1.2;
     }
     
     h2 {
-        font-size: 2rem !important;
-        margin-top: 2rem !important;
+        font-size: 1.5rem !important;
     }
     
     h3 {
-        font-size: 1.5rem !important;
+        font-size: 1.2rem !important;
         font-weight: 600;
     }
     
-    /* Paragraph & Text */
+    /* Compact Paragraph & Text */
     p, .stMarkdown {
         color: var(--text-secondary);
-        font-size: 1.05rem;
-        line-height: 1.7;
+        font-size: 0.95rem;
+        line-height: 1.5;
         font-weight: 400;
+        margin: 0.3rem 0;
     }
     
-    /* Cards & Containers */
+    /* Compact Cards & Containers */
     .stTabs, .element-container, div[data-testid="stExpander"] {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
+        border-radius: 12px;
+        padding: 1rem;
         box-shadow: var(--shadow-md);
         backdrop-filter: blur(10px);
+        margin: 0.5rem 0;
     }
     
-    /* Tab Styling */
+    /* Compact Tab Styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 1rem;
+        gap: 0.5rem;
         background: transparent;
         border-bottom: 2px solid var(--border-color);
         padding-bottom: 0;
@@ -109,9 +160,9 @@ def apply_professional_styling():
         border: none;
         color: var(--text-secondary);
         font-weight: 600;
-        font-size: 1.1rem;
-        padding: 1rem 2rem;
-        border-radius: 12px 12px 0 0;
+        font-size: 0.95rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px 8px 0 0;
         transition: all 0.3s ease;
     }
     
@@ -121,15 +172,15 @@ def apply_professional_styling():
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
     
-    /* Input Fields */
+    /* Compact Input Fields */
     .stTextInput > div > div > input,
     .stTextArea textarea {
         background: rgba(26, 26, 46, 0.6) !important;
         border: 2px solid var(--border-color) !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         color: var(--text-primary) !important;
-        font-size: 1rem !important;
-        padding: 0.75rem 1rem !important;
+        font-size: 0.9rem !important;
+        padding: 0.6rem 0.8rem !important;
         transition: all 0.3s ease !important;
         font-family: 'Inter', sans-serif !important;
     }
@@ -141,19 +192,20 @@ def apply_professional_styling():
         outline: none !important;
     }
     
-    /* Buttons */
+    /* Compact Buttons */
     .stButton > button {
         background: var(--primary-gradient) !important;
         color: white !important;
         border: none !important;
-        border-radius: 12px !important;
-        padding: 0.75rem 2rem !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1.5rem !important;
         font-weight: 600 !important;
-        font-size: 1.05rem !important;
+        font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
         text-transform: none !important;
         font-family: 'Inter', sans-serif !important;
+        width: 100%;
     }
     
     .stButton > button:hover {
@@ -165,17 +217,18 @@ def apply_professional_styling():
         transform: translateY(0);
     }
     
-    /* Download Buttons */
+    /* Compact Download Buttons */
     .stDownloadButton > button {
         background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 10px !important;
-        padding: 0.6rem 1.5rem !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.2rem !important;
         font-weight: 600 !important;
-        font-size: 0.95rem !important;
+        font-size: 0.9rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3) !important;
+        width: 100%;
     }
     
     .stDownloadButton > button:hover {
@@ -183,9 +236,9 @@ def apply_professional_styling():
         box-shadow: 0 8px 20px rgba(79, 172, 254, 0.5) !important;
     }
     
-    /* Metrics */
+    /* Compact Metrics */
     [data-testid="stMetricValue"] {
-        font-size: 2rem !important;
+        font-size: 1.5rem !important;
         font-weight: 700 !important;
         background: var(--primary-gradient);
         -webkit-background-clip: text;
@@ -195,13 +248,13 @@ def apply_professional_styling():
     
     [data-testid="stMetricLabel"] {
         color: var(--text-secondary) !important;
-        font-size: 0.9rem !important;
+        font-size: 0.75rem !important;
         font-weight: 600 !important;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
     
-    /* Progress Bar */
+    /* Compact Progress Bar */
     .stProgress > div > div > div > div {
         background: var(--primary-gradient) !important;
         border-radius: 10px;
@@ -210,15 +263,17 @@ def apply_professional_styling():
     .stProgress > div > div {
         background: rgba(102, 126, 234, 0.2) !important;
         border-radius: 10px;
+        height: 8px !important;
     }
     
-    /* Alert Boxes */
+    /* Compact Alert Boxes */
     .stAlert {
         background: rgba(26, 26, 46, 0.8) !important;
         border-left: 4px solid var(--accent-color) !important;
-        border-radius: 12px !important;
-        padding: 1rem 1.5rem !important;
+        border-radius: 10px !important;
+        padding: 0.8rem 1rem !important;
         color: var(--text-primary) !important;
+        margin: 0.5rem 0 !important;
     }
     
     .stSuccess {
@@ -233,32 +288,58 @@ def apply_professional_styling():
         border-left-color: #4facfe !important;
     }
     
-    /* Sidebar */
+    /* Sidebar - Fixed Height */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
         border-right: 1px solid var(--border-color);
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    [data-testid="stSidebar"] > div:first-child {
+        padding: 1rem;
     }
     
     [data-testid="stSidebar"] .stMarkdown {
         color: var(--text-secondary);
+        font-size: 0.9rem;
     }
     
-    /* Code Blocks */
+    /* Sidebar Scrollbar */
+    [data-testid="stSidebar"]::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    [data-testid="stSidebar"]::-webkit-scrollbar-track {
+        background: var(--dark-bg);
+    }
+    
+    [data-testid="stSidebar"]::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 10px;
+    }
+    
+    /* Compact Code Blocks */
     .stCodeBlock, code {
         background: rgba(15, 15, 35, 0.8) !important;
         border: 1px solid var(--border-color) !important;
-        border-radius: 10px !important;
+        border-radius: 8px !important;
         font-family: 'JetBrains Mono', monospace !important;
         color: #a0a0c0 !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem !important;
     }
     
-    /* Expander */
+    /* Compact Expander */
     .streamlit-expanderHeader {
         background: rgba(26, 26, 46, 0.6) !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         font-weight: 600 !important;
         color: var(--text-primary) !important;
         border: 1px solid var(--border-color) !important;
+        padding: 0.6rem 1rem !important;
+        font-size: 0.9rem !important;
     }
     
     .streamlit-expanderHeader:hover {
@@ -266,26 +347,27 @@ def apply_professional_styling():
         border-color: var(--accent-color) !important;
     }
     
-    /* Divider */
+    /* Compact Divider */
     hr {
         border: none;
         height: 1px;
         background: linear-gradient(90deg, transparent, var(--border-color), transparent);
-        margin: 2rem 0;
+        margin: 1rem 0;
     }
     
-    /* Radio Buttons */
+    /* Compact Radio Buttons */
     .stRadio > label {
         color: var(--text-primary) !important;
         font-weight: 600 !important;
+        font-size: 0.9rem !important;
     }
     
-    /* File Uploader */
+    /* Compact File Uploader */
     [data-testid="stFileUploader"] {
         background: rgba(26, 26, 46, 0.6);
         border: 2px dashed var(--border-color);
-        border-radius: 16px;
-        padding: 2rem;
+        border-radius: 12px;
+        padding: 1rem;
         transition: all 0.3s ease;
     }
     
@@ -294,62 +376,57 @@ def apply_professional_styling():
         background: rgba(102, 126, 234, 0.05);
     }
     
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: var(--dark-bg);
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: var(--primary-gradient);
-        border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--accent-hover);
-    }
-    
-    /* Custom Animation */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .element-container {
-        animation: fadeInUp 0.6s ease-out;
-    }
-    
-    /* Glassmorphism Effect */
-    .glass-card {
-        background: rgba(26, 26, 46, 0.4);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(102, 126, 234, 0.2);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-    
-    /* Labels */
+    /* Compact Labels */
     label {
         color: var(--text-primary) !important;
         font-weight: 600 !important;
-        font-size: 0.95rem !important;
+        font-size: 0.85rem !important;
     }
     
-    /* Caption */
+    /* Compact Caption */
     .caption, small {
         color: var(--text-secondary) !important;
-        font-size: 0.85rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Column Spacing */
+    [data-testid="column"] {
+        padding: 0 0.5rem;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding: 0.5rem 1rem;
+        }
+        
+        h1 {
+            font-size: 2rem !important;
+        }
+        
+        h2 {
+            font-size: 1.3rem !important;
+        }
+        
+        [data-testid="column"] {
+            padding: 0 0.25rem;
+        }
+    }
+    
+    /* Remove Extra Spacing */
+    .element-container {
+        margin: 0.3rem 0 !important;
+    }
+    
+    div[data-testid="stVerticalBlock"] > div {
+        gap: 0.5rem;
+    }
+    
+    /* Compact JSON Display */
+    .stJson {
+        max-height: 300px;
+        overflow-y: auto;
+        font-size: 0.85rem;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -842,20 +919,20 @@ def remove_url_prefix_from_json(payload: Dict[str, Any], url_prefix: str) -> Dic
 # -------------------------
 
 def main():
-    # Hero Header with Gradient
+    # Compact Hero Header
     st.markdown("""
-    <div style='text-align: center; padding: 3rem 0 2rem 0;'>
-        <div style='display: inline-block; padding: 0.5rem 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); border-radius: 50px; border: 1px solid rgba(102, 126, 234, 0.3); margin-bottom: 1.5rem;'>
-            <span style='font-size: 0.9rem; font-weight: 600; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em;'>✨ Enterprise Edition</span>
+    <div style='text-align: center; padding: 1.5rem 0 1rem 0;'>
+        <div style='display: inline-block; padding: 0.4rem 1.2rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); border-radius: 50px; border: 1px solid rgba(102, 126, 234, 0.3); margin-bottom: 1rem;'>
+            <span style='font-size: 0.8rem; font-weight: 600; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em;'>✨ Enterprise Edition</span>
         </div>
-        <h1 style='margin-bottom: 0.8rem; font-size: 3.5rem;'>🎨 Figma UI Extractor</h1>
-        <p style='font-size: 1.2rem; color: #a0a0c0; font-weight: 400; max-width: 700px; margin: 0 auto; line-height: 1.6;'>
-            Extract, analyze, and export UI components from Figma with precision and elegance
+        <h1 style='margin-bottom: 0.5rem; font-size: 2.5rem;'>🎨 Figma UI Extractor</h1>
+        <p style='font-size: 1rem; color: #a0a0c0; font-weight: 400; max-width: 700px; margin: 0 auto; line-height: 1.5;'>
+            Extract, analyze, and export UI components from Figma with precision
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Sidebar
+    # Compact Sidebar
     with st.sidebar:
         st.markdown("### ⚙️ Dashboard")
         st.markdown("---")
@@ -872,121 +949,106 @@ def main():
         st.markdown("---")
         st.markdown("### 🎯 Features")
         st.markdown("""
-        - **Smart Extraction** - Automated component detection
-        - **Style Parsing** - Complete design token extraction
-        - **Image Resolution** - SVG and raster support
-        - **JSON Export** - Structured metadata output
-        """)
-        
-        st.markdown("---")
-        st.markdown("### 📚 Resources")
-        st.markdown("""
-        - [Figma API Docs](https://www.figma.com/developers/api)
-        - [Angular Framework](https://angular.io)
-        - [Design Systems](https://www.designsystems.com)
+        - **Smart Extraction** - Automated detection
+        - **Style Parsing** - Complete tokens
+        - **Image Resolution** - SVG support
+        - **JSON Export** - Structured output
         """)
         
         st.markdown("---")
         st.markdown("### 🔐 Security")
-        st.info("🔒 Tokens are never stored. All processing is session-based.")
+        st.info("🔒 Session-based processing")
 
     # Main Content
     st.markdown("### 🎯 Component Extraction")
-    st.markdown("Extract UI components with complete metadata, styling information, and image assets from your Figma designs.")
-    st.markdown("---")
-
+    
     col1, col2 = st.columns(2)
     with col1:
         file_key = st.text_input(
             "📁 Figma File Key", 
             value="", 
-            help="Enter the file key from your Figma file URL (e.g., abc123xyz from figma.com/file/abc123xyz/...)",
+            help="Enter the file key from your Figma file URL",
             placeholder="abc123xyz..."
         )
     with col2:
         node_ids = st.text_input(
             "🔗 Node IDs (Optional)", 
             value="", 
-            help="Comma-separated node IDs to extract specific components. Leave empty to extract entire file.",
+            help="Comma-separated node IDs. Leave empty for entire file.",
             placeholder="123:456, 789:012"
         )
 
     token = st.text_input(
         "🔑 Figma Personal Access Token", 
         type="password", 
-        help="Generate a personal access token in your Figma account settings under 'Personal Access Tokens'",
+        help="Generate token in Figma account settings",
         placeholder="Enter your Figma token..."
     )
-
-    st.markdown("")  # Spacing
     
     if st.button("🚀 Extract UI Components", type="primary"):
         if not token or not file_key:
-            st.error("⚠️ Please provide both a file key and a Figma access token to proceed.")
+            st.error("⚠️ Please provide both file key and token.")
         else:
             try:
                 progress = st.progress(0)
                 status = st.empty()
 
-                status.text("📡 Connecting to Figma API...")
+                status.text("📡 Connecting...")
                 progress.progress(5)
                 nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
 
-                status.text("🖼️ Analyzing component structure...")
+                status.text("🖼️ Analyzing...")
                 progress.progress(25)
                 image_refs, node_id_list, node_meta = walk_nodes_collect_images_and_ids(nodes_payload)
 
-                status.text("🔗 Resolving image assets...")
+                status.text("🔗 Resolving assets...")
                 progress.progress(50)
                 filtered_fills, renders_map = resolve_image_urls(file_key, image_refs, node_id_list, token)
 
-                status.text("🎨 Processing design tokens...")
+                status.text("🎨 Processing...")
                 progress.progress(70)
                 node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
                 merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
 
-                status.text("📦 Extracting components...")
+                status.text("📦 Extracting...")
                 progress.progress(85)
                 final_output = extract_ui_components(merged_payload)
 
-                status.text("✨ Finalizing extraction...")
+                status.text("✨ Finalizing...")
                 progress.progress(95)
                 sanitized = remove_url_prefix_from_json(final_output, "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/")
                 st.session_state['metadata_json'] = sanitized
                 st.session_state['stats']['files_processed'] += 1
                 progress.progress(100)
                 status.empty()
-                st.success("✅ Extraction completed successfully!")
+                st.success("✅ Extraction completed!")
 
-                # Metrics Display
-                st.markdown("### 📊 Extraction Summary")
-                st.markdown("")
+                # Compact Metrics
+                st.markdown("### 📊 Summary")
                 
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Total Components", sanitized['metadata']['totalComponents'])
+                    st.metric("Total", sanitized['metadata']['totalComponents'])
                 with col2:
-                    st.metric("Text Elements", len(sanitized.get('textElements', [])))
+                    st.metric("Text", len(sanitized.get('textElements', [])))
                 with col3:
                     st.metric("Buttons", len(sanitized.get('buttons', [])))
                 with col4:
                     st.metric("Containers", len(sanitized.get('containers', [])))
 
-                st.markdown("")
-                
-                # Additional metrics in expandable section
-                with st.expander("📋 Detailed Category Breakdown", expanded=True):
+                # Compact Category Breakdown
+                with st.expander("📋 Category Breakdown"):
                     col1, col2 = st.columns(2)
                     
                     categories = {
-                        'textElements': 'Text Elements',
+                        'textElements': 'Text',
                         'buttons': 'Buttons',
-                        'inputs': 'Input Fields',
+                        'inputs': 'Inputs',
                         'containers': 'Containers',
                         'images': 'Images',
                         'navigation': 'Navigation',
-                        'vectors': 'Vector Graphics',
-                        'other': 'Other Components'
+                        'vectors': 'Vectors',
+                        'other': 'Other'
                     }
                     
                     items = list(categories.items())
@@ -996,24 +1058,22 @@ def main():
                         for key, label in items[:mid]:
                             count = len(sanitized.get(key, []))
                             if count > 0:
-                                st.markdown(f"**{label}:** `{count}` components")
+                                st.markdown(f"**{label}:** `{count}`")
                     
                     with col2:
                         for key, label in items[mid:]:
                             count = len(sanitized.get(key, []))
                             if count > 0:
-                                st.markdown(f"**{label}:** `{count}` components")
+                                st.markdown(f"**{label}:** `{count}`")
 
             except Exception as e:
                 st.error(f"❌ Extraction failed: {str(e)}")
-                st.info("💡 Make sure your token is valid and you have access to the specified file.")
+                st.info("💡 Verify your token and file access.")
 
-    # Download Section
+    # Compact Download Section
     if 'metadata_json' in st.session_state:
         st.markdown("---")
-        st.markdown("### 💾 Export Options")
-        st.markdown("Download the extracted component metadata in JSON format.")
-        st.markdown("")
+        st.markdown("### 💾 Export")
         
         json_str = json.dumps(st.session_state['metadata_json'], indent=2, ensure_ascii=False)
 
@@ -1028,23 +1088,20 @@ def main():
                 use_container_width=True
             )
         with col2:
-            st.metric("File Size", f"{len(json_str):,} bytes")
+            st.metric("Size", f"{len(json_str):,}B")
         with col3:
             st.metric("Format", "JSON")
 
-        # Preview Section
-        with st.expander("👁️ Preview JSON Structure", expanded=False):
+        # Compact Preview
+        with st.expander("👁️ Preview"):
             st.json(st.session_state['metadata_json']['metadata'])
 
-    # Footer
+    # Compact Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; padding: 2rem 0 1rem 0;'>
-        <p style='color: #6B7280; font-size: 0.95rem; margin: 0;'>
-            Built with ❤️ using <strong>Streamlit</strong> • Professional Edition v1.0
-        </p>
-        <p style='color: #4B5563; font-size: 0.85rem; margin-top: 0.5rem;'>
-            Powered by Figma API • Optimized for Angular Development
+    <div style='text-align: center; padding: 1rem 0 0.5rem 0;'>
+        <p style='color: #6B7280; font-size: 0.85rem; margin: 0;'>
+            Built with ❤️ using <strong>Streamlit</strong> • v1.0
         </p>
     </div>
     """, unsafe_allow_html=True)
