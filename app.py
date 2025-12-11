@@ -1257,4 +1257,166 @@ def main():
                 # Step 4: Process tokens
                 status.info("🎨 Processing design tokens...")
                 progress.progress(75)
-                node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map,
+                node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
+                merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
+
+                # Step 5: Extract components
+                status.info("📦 Extracting UI components...")
+                progress.progress(90)
+                final_output = extract_ui_components(merged_payload)
+
+                # Step 6: Finalize
+                status.info("✨ Finalizing extraction...")
+                progress.progress(98)
+                sanitized = remove_url_prefix_from_json(
+                    final_output,
+                    "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/"
+                )
+                
+                st.session_state['metadata_json'] = sanitized
+                st.session_state['stats']['files_processed'] += 1
+                st.session_state['stats']['total_components'] = sanitized['metadata']['totalComponents']
+                
+                progress.progress(100)
+                status.empty()
+                
+                st.success("✅ Extraction completed successfully!")
+                st.balloons()
+
+            except Exception as e:
+                st.error(f"❌ Extraction failed: {str(e)}")
+                st.info("💡 Please verify your file key, token validity, and Figma permissions.")
+
+    # Results Display
+    if 'metadata_json' in st.session_state:
+        data = st.session_state['metadata_json']
+        
+        st.markdown("---")
+        st.markdown("### 📊 Extraction Summary")
+        st.markdown("")
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Components", data['metadata']['totalComponents'])
+        with col2:
+            st.metric("Text Elements", len(data.get('textElements', [])))
+        with col3:
+            st.metric("Buttons", len(data.get('buttons', [])))
+        with col4:
+            st.metric("Containers", len(data.get('containers', [])))
+
+        st.markdown("")
+
+        with st.expander("📋 Detailed Category Breakdown", expanded=True):
+            col1, col2, col3, col4 = st.columns(4)
+            
+            categories = [
+                ('textElements', '📝 Text', col1),
+                ('buttons', '🔘 Buttons', col2),
+                ('inputs', '📥 Inputs', col3),
+                ('containers', '📦 Containers', col4),
+                ('images', '🖼️ Images', col1),
+                ('navigation', '🧭 Navigation', col2),
+                ('vectors', '✏️ Vectors', col3),
+                ('other', '🔧 Other', col4)
+            ]
+            
+            for key, label, col in categories:
+                with col:
+                    count = len(data.get(key, []))
+                    st.markdown(f"**{label}**")
+                    st.markdown(f"`{count}` components")
+                    st.markdown("")
+
+        st.markdown("---")
+        st.markdown("### 💾 Export & Download")
+        st.markdown("Download your extracted component metadata in structured JSON format.")
+        st.markdown("")
+
+        json_str = json.dumps(data, indent=2, ensure_ascii=False)
+        
+        col1, col2, col3 = st.columns([2, 1, 1])
+        with col1:
+            st.download_button(
+                "📥 Download metadata.json",
+                data=json_str,
+                file_name="figma_ui_metadata.json",
+                mime="application/json",
+                on_click=lambda: st.session_state['stats'].update({
+                    'downloads': st.session_state['stats']['downloads'] + 1
+                }),
+                use_container_width=True
+            )
+        with col2:
+            size_bytes = len(json_str.encode('utf-8'))
+            if size_bytes < 1024:
+                size = f"{size_bytes}B"
+            elif size_bytes < 1024 * 1024:
+                size = f"{size_bytes/1024:.1f}KB"
+            else:
+                size = f"{size_bytes/(1024*1024):.2f}MB"
+            st.metric("File Size", size)
+        with col3:
+            st.metric("Format", "JSON")
+
+        st.markdown("")
+
+        # Preview Sections
+        with st.expander("👁️ Metadata Preview"):
+            st.json(data['metadata'])
+
+        with st.expander("🔍 Component Samples"):
+            tab1, tab2, tab3, tab4 = st.tabs(["📝 Text Elements", "🔘 Buttons", "📦 Containers", "📊 All Categories"])
+            
+            with tab1:
+                if data.get('textElements'):
+                    st.json(data['textElements'][:3])
+                    if len(data['textElements']) > 3:
+                        st.caption(f"Showing 3 of {len(data['textElements'])} text elements")
+                else:
+                    st.info("No text elements found")
+            
+            with tab2:
+                if data.get('buttons'):
+                    st.json(data['buttons'][:3])
+                    if len(data['buttons']) > 3:
+                        st.caption(f"Showing 3 of {len(data['buttons'])} buttons")
+                else:
+                    st.info("No buttons found")
+            
+            with tab3:
+                if data.get('containers'):
+                    st.json(data['containers'][:3])
+                    if len(data['containers']) > 3:
+                        st.caption(f"Showing 3 of {len(data['containers'])} containers")
+                else:
+                    st.info("No containers found")
+            
+            with tab4:
+                category_counts = {
+                    cat: len(data.get(cat, []))
+                    for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']
+                }
+                st.json(category_counts)
+
+    # Premium Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; padding: 2rem 0 1rem 0;">
+        <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 0.5rem; font-weight: 600;">
+            Built with ❤️ for Design Systems & Enterprise Teams
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem; margin-bottom: 0.8rem;">
+            Premium Enterprise Edition • Powered by Figma API • Production-Ready Architecture
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem;">
+            <span style="color: var(--text-soft); font-size: 0.85rem;">🎨 Luxury Gradients</span>
+            <span style="color: var(--text-soft); font-size: 0.85rem;">⚡ High Performance</span>
+            <span style="color: var(--text-soft); font-size: 0.85rem;">📱 Fully Responsive</span>
+            <span style="color: var(--text-soft); font-size: 0.85rem;">🔒 Enterprise Secure</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
