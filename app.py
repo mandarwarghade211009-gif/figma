@@ -1,87 +1,63 @@
 #!/usr/bin/env python3
 """
-Figma UI Extractor — Premium Enterprise Edition
-Ultra-professional SaaS design • Luxury gradients • Production-ready
+Professional Figma UI Extractor - Fully Responsive Edition
+Enterprise-grade design system for UI extraction - No scrolling, viewport-fit design
 """
 
 import streamlit as st
 import requests
 import json
+import re
 import datetime
+from io import BytesIO
 from typing import Any, Dict, List, Set, Tuple, Optional
 import copy
 
-# =====================================================
-# PREMIUM LUXURY THEME — ULTRA PROFESSIONAL
-# =====================================================
-def apply_premium_styling():
-    """Apply premium luxury gradient theme with professional polish"""
+# -----------------------------------------------------
+# PROFESSIONAL THEMING - Responsive No-Scroll Design
+# -----------------------------------------------------
+def apply_professional_styling():
+    """Apply modern, professional gradient-based theme with viewport-fit responsive layout"""
     st.markdown("""
     <style>
-    /* Premium Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    /* Reset and Viewport Control */
     * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
     }
-
+    
     html, body {
         width: 100vw;
         height: 100vh;
         overflow: hidden;
+        margin: 0;
+        padding: 0;
     }
-
+    
+    /* Root Variables - Modern Purple/Blue Gradient Theme */
     :root {
-        /* Premium Gradient Palette */
-        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-        
-        /* Luxury Colors */
-        --primary-purple: #667eea;
-        --primary-violet: #764ba2;
-        --accent-pink: #f093fb;
-        --accent-coral: #f5576c;
-        --success-cyan: #00f2fe;
-        --success-blue: #4facfe;
-        
-        /* Sophisticated Neutrals */
-        --bg-luxury: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-        --surface-white: #ffffff;
-        --surface-light: #fafbfc;
-        --surface-elevated: rgba(255, 255, 255, 0.95);
-        
-        /* Typography */
-        --text-primary: #1a1a2e;
-        --text-secondary: #16213e;
-        --text-muted: #6c757d;
-        --text-soft: #8892a6;
-        
-        /* Borders & Effects */
-        --border-subtle: rgba(102, 126, 234, 0.12);
-        --border-medium: rgba(102, 126, 234, 0.25);
-        --border-strong: rgba(102, 126, 234, 0.4);
-        
-        /* Premium Shadows */
-        --shadow-luxury: 0 20px 60px rgba(102, 126, 234, 0.15);
-        --shadow-elevated: 0 30px 80px rgba(118, 75, 162, 0.2);
-        --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.08);
-        --shadow-glow: 0 0 40px rgba(102, 126, 234, 0.3);
-        
-        /* Glass Effects */
-        --glass-bg: rgba(255, 255, 255, 0.88);
-        --glass-border: rgba(255, 255, 255, 0.4);
-        --blur-premium: blur(20px);
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --accent-color: #667eea;
+        --accent-hover: #764ba2;
+        --dark-bg: #0f0f23;
+        --card-bg: #1a1a2e;
+        --text-primary: #ffffff;
+        --text-secondary: #a0a0c0;
+        --border-color: rgba(102, 126, 234, 0.2);
+        --shadow-lg: 0 20px 60px rgba(102, 126, 234, 0.15);
+        --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-
-    /* Main App Container */
+    
+    /* Main App Container - Viewport Fit */
     .stApp {
-        background: var(--bg-luxury);
-        font-family: 'Sora', -apple-system, system-ui, 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         color: var(--text-primary);
         width: 100vw;
         height: 100vh;
@@ -90,528 +66,410 @@ def apply_premium_styling():
         top: 0;
         left: 0;
     }
-
-    /* Scrollable Content Area */
+    
+    /* Main Content Area - Scrollable Container */
     .main .block-container {
-        max-width: 1400px;
-        padding: 2rem 2.5rem;
-        margin: 0 auto;
-        height: calc(100vh - 4rem);
+        max-width: 100%;
+        padding: 1rem 2rem;
+        height: calc(100vh - 2rem);
         overflow-y: auto;
         overflow-x: hidden;
     }
-
-    /* Premium Scrollbar */
+    
+    /* Custom Scrollbar */
     .main .block-container::-webkit-scrollbar {
-        width: 12px;
+        width: 8px;
     }
+    
     .main .block-container::-webkit-scrollbar-track {
-        background: linear-gradient(180deg, #f5f7fa 0%, #e9ecef 100%);
-        border-radius: 10px;
-        border: 1px solid rgba(102, 126, 234, 0.1);
+        background: var(--dark-bg);
     }
+    
     .main .block-container::-webkit-scrollbar-thumb {
-        background: var(--gradient-primary);
+        background: var(--primary-gradient);
         border-radius: 10px;
-        border: 2px solid #f5f7fa;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
+    
     .main .block-container::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        background: var(--accent-hover);
     }
-
+    
     /* Hide Streamlit Branding */
-    #MainMenu, footer, header {
-        visibility: hidden;
-        height: 0;
-    }
-    .stDeployButton {
-        display: none;
-    }
-
-    /* ===== TYPOGRAPHY ===== */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display: none;}
+    
+    /* Compact Header Styling */
     h1, h2, h3, h4, h5, h6 {
-        font-family: 'Space Grotesk', 'Sora', system-ui;
+        font-family: 'Inter', sans-serif;
         font-weight: 700;
-        letter-spacing: -0.03em;
-        line-height: 1.2;
-    }
-
-    h1 {
-        font-size: 3.2rem !important;
-        background: var(--gradient-hero);
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #667eea 0%, #f5576c 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin: 0.8rem 0 !important;
-        text-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
     }
-
+    
+    h1 {
+        font-size: 2.5rem !important;
+        line-height: 1.2;
+    }
+    
     h2 {
-        font-size: 2rem !important;
-        color: var(--text-primary);
-        margin: 1rem 0 0.5rem 0 !important;
+        font-size: 1.5rem !important;
     }
-
+    
     h3 {
-        font-size: 1.4rem !important;
-        color: var(--text-secondary);
+        font-size: 1.2rem !important;
         font-weight: 600;
-        margin: 0.8rem 0 0.4rem 0 !important;
     }
-
+    
+    /* Compact Paragraph & Text */
     p, .stMarkdown {
-        color: var(--text-muted);
-        font-size: 1.05rem;
-        line-height: 1.7;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.5;
         font-weight: 400;
-        margin: 0.6rem 0;
+        margin: 0.3rem 0;
     }
-
-    /* ===== PREMIUM GLASS CARDS ===== */
-    .luxury-card {
-        background: var(--glass-bg);
-        backdrop-filter: var(--blur-premium);
-        border-radius: 24px;
-        border: 1px solid var(--border-subtle);
-        box-shadow: var(--shadow-luxury);
-        padding: 2rem;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
+    
+    /* Compact Cards & Containers */
+    .stTabs, .element-container, div[data-testid="stExpander"] {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: var(--shadow-md);
+        backdrop-filter: blur(10px);
+        margin: 0.5rem 0;
     }
-
-    .luxury-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--gradient-primary);
-        opacity: 0;
-        transition: opacity 0.4s ease;
-    }
-
-    .luxury-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-elevated);
-        border-color: var(--border-medium);
-    }
-
-    .luxury-card:hover::before {
-        opacity: 1;
-    }
-
-    .element-container {
-        margin: 0.8rem 0 !important;
-    }
-
-    /* ===== PREMIUM TABS ===== */
+    
+    /* Compact Tab Styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0.5rem;
-        background: var(--surface-light);
-        border-radius: 16px;
-        padding: 0.5rem;
-        border: 1px solid var(--border-subtle);
-        box-shadow: var(--shadow-soft);
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 12px;
-        padding: 0.8rem 1.8rem;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        border: none;
         background: transparent;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-family: 'Space Grotesk', system-ui;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0;
     }
-
-    .stTabs [data-baseweb="tab"]:hover {
-        background: rgba(102, 126, 234, 0.08);
-        color: var(--primary-purple);
+    
+    .stTabs [data-baseweb="tab"] {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.3s ease;
     }
-
+    
     .stTabs [aria-selected="true"] {
-        background: var(--gradient-primary) !important;
-        color: white !important;
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-        transform: translateY(-1px);
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
-
-    /* ===== LUXURY INPUT FIELDS ===== */
+    
+    /* Compact Input Fields */
     .stTextInput > div > div > input,
     .stTextArea textarea {
-        background: var(--surface-white) !important;
-        border-radius: 16px !important;
-        border: 2px solid var(--border-subtle) !important;
-        padding: 1rem 1.4rem !important;
-        font-size: 1rem !important;
+        background: rgba(26, 26, 46, 0.6) !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: 10px !important;
         color: var(--text-primary) !important;
-        font-family: 'Sora', system-ui !important;
-        box-shadow: var(--shadow-soft);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-size: 0.9rem !important;
+        padding: 0.6rem 0.8rem !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Inter', sans-serif !important;
     }
-
-    .stTextInput > div > div > input:hover,
-    .stTextArea textarea:hover {
-        border-color: var(--border-medium) !important;
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
-    }
-
+    
     .stTextInput > div > div > input:focus,
     .stTextArea textarea:focus {
-        border-color: var(--primary-purple) !important;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), var(--shadow-glow) !important;
+        border-color: var(--accent-color) !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
         outline: none !important;
     }
-
-    label {
-        font-size: 0.95rem !important;
-        font-weight: 600 !important;
-        color: var(--text-secondary) !important;
-        font-family: 'Space Grotesk', system-ui !important;
-        letter-spacing: -0.01em;
-    }
-
-    /* ===== PREMIUM BUTTONS ===== */
+    
+    /* Compact Buttons */
     .stButton > button {
-        background: var(--gradient-primary) !important;
+        background: var(--primary-gradient) !important;
         color: white !important;
-        border-radius: 16px !important;
         border: none !important;
-        padding: 1rem 2.5rem !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1.5rem !important;
         font-weight: 600 !important;
-        font-size: 1.05rem !important;
-        font-family: 'Space Grotesk', system-ui !important;
-        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stButton > button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
+        font-size: 0.95rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        text-transform: none !important;
+        font-family: 'Inter', sans-serif !important;
         width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s;
     }
-
-    .stButton > button:hover::before {
-        left: 100%;
-    }
-
+    
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 16px 40px rgba(102, 126, 234, 0.5);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5) !important;
     }
-
+    
     .stButton > button:active {
         transform: translateY(0);
     }
-
-    /* Download Button */
+    
+    /* Compact Download Buttons */
     .stDownloadButton > button {
-        background: var(--gradient-success) !important;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
         color: white !important;
-        border-radius: 16px !important;
         border: none !important;
-        padding: 0.9rem 2rem !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.2rem !important;
         font-weight: 600 !important;
-        font-size: 1rem !important;
-        font-family: 'Space Grotesk', system-ui !important;
-        box-shadow: 0 12px 32px rgba(79, 172, 254, 0.4);
-        transition: all 0.3s ease;
+        font-size: 0.9rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3) !important;
+        width: 100%;
     }
-
+    
     .stDownloadButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 16px 40px rgba(79, 172, 254, 0.5);
+        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.5) !important;
     }
-
-    /* ===== LUXURY METRICS ===== */
-    [data-testid="stMetric"] {
-        background: var(--glass-bg);
-        backdrop-filter: var(--blur-premium);
-        border-radius: 20px;
-        border: 1px solid var(--border-subtle);
-        box-shadow: var(--shadow-luxury);
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-    }
-
-    [data-testid="stMetric"]:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-elevated);
-        border-color: var(--border-medium);
-    }
-
+    
+    /* Compact Metrics */
     [data-testid="stMetricValue"] {
-        font-size: 2.2rem !important;
-        font-weight: 800 !important;
-        background: var(--gradient-primary);
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        background: var(--primary-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        font-family: 'Space Grotesk', system-ui;
     }
-
+    
     [data-testid="stMetricLabel"] {
-        font-size: 0.85rem !important;
+        color: var(--text-secondary) !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-soft) !important;
-        font-weight: 600;
+        letter-spacing: 0.05em;
     }
-
-    /* ===== PROGRESS BAR ===== */
+    
+    /* Compact Progress Bar */
     .stProgress > div > div > div > div {
-        background: var(--gradient-primary) !important;
+        background: var(--primary-gradient) !important;
         border-radius: 10px;
     }
+    
     .stProgress > div > div {
-        background: linear-gradient(90deg, #e9ecef 0%, #f8f9fa 100%) !important;
+        background: rgba(102, 126, 234, 0.2) !important;
         border-radius: 10px;
-        height: 10px !important;
-        border: 1px solid var(--border-subtle);
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        height: 8px !important;
     }
-
-    /* ===== PREMIUM ALERTS ===== */
+    
+    /* Compact Alert Boxes */
     .stAlert {
-        border-radius: 20px !important;
-        border: 1px solid var(--border-subtle) !important;
-        background: var(--glass-bg) !important;
-        backdrop-filter: var(--blur-premium);
-        box-shadow: var(--shadow-luxury);
-        padding: 1.2rem 1.5rem !important;
+        background: rgba(26, 26, 46, 0.8) !important;
+        border-left: 4px solid var(--accent-color) !important;
+        border-radius: 10px !important;
+        padding: 0.8rem 1rem !important;
+        color: var(--text-primary) !important;
+        margin: 0.5rem 0 !important;
     }
+    
     .stSuccess {
-        border-left: 4px solid var(--success-blue) !important;
+        border-left-color: #00f2fe !important;
     }
+    
     .stError {
-        border-left: 4px solid var(--accent-coral) !important;
+        border-left-color: #f5576c !important;
     }
+    
     .stInfo {
-        border-left: 4px solid var(--primary-purple) !important;
+        border-left-color: #4facfe !important;
     }
-
-    /* ===== LUXURY SIDEBAR ===== */
+    
+    /* Sidebar - Fixed Height */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--surface-white) 0%, var(--surface-light) 100%);
-        border-right: 1px solid var(--border-subtle);
-        backdrop-filter: var(--blur-premium);
-        box-shadow: 8px 0 32px rgba(102, 126, 234, 0.08);
+        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+        border-right: 1px solid var(--border-color);
         height: 100vh;
         overflow-y: auto;
+        overflow-x: hidden;
     }
-
+    
     [data-testid="stSidebar"] > div:first-child {
-        padding: 2rem 1.5rem;
+        padding: 1rem;
     }
-
-    [data-testid="stSidebar"] h3 {
-        font-size: 1.2rem !important;
-        margin-bottom: 1rem !important;
+    
+    [data-testid="stSidebar"] .stMarkdown {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
     }
-
+    
+    /* Sidebar Scrollbar */
     [data-testid="stSidebar"]::-webkit-scrollbar {
-        width: 8px;
+        width: 6px;
     }
+    
     [data-testid="stSidebar"]::-webkit-scrollbar-track {
-        background: var(--surface-light);
+        background: var(--dark-bg);
     }
+    
     [data-testid="stSidebar"]::-webkit-scrollbar-thumb {
-        background: var(--gradient-primary);
+        background: var(--primary-gradient);
         border-radius: 10px;
     }
-
-    /* ===== EXPANDERS ===== */
-    .streamlit-expanderHeader {
-        background: var(--surface-light) !important;
-        border-radius: 16px !important;
-        border: 1px solid var(--border-subtle) !important;
-        font-size: 1rem !important;
-        font-weight: 600 !important;
-        color: var(--text-secondary) !important;
-        padding: 1rem 1.5rem !important;
-        transition: all 0.3s ease;
-    }
-
-    .streamlit-expanderHeader:hover {
-        background: rgba(102, 126, 234, 0.05) !important;
-        border-color: var(--border-medium) !important;
-        box-shadow: var(--shadow-soft);
-    }
-
-    /* ===== JSON / CODE ===== */
-    .stJson {
-        max-height: 400px;
-        overflow-y: auto;
-        background: var(--surface-light);
-        border-radius: 16px;
-        border: 1px solid var(--border-subtle);
-        padding: 1.2rem !important;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    code, .stCodeBlock {
+    
+    /* Compact Code Blocks */
+    .stCodeBlock, code {
+        background: rgba(15, 15, 35, 0.8) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
         font-family: 'JetBrains Mono', monospace !important;
+        color: #a0a0c0 !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem !important;
+    }
+    
+    /* Compact Expander */
+    .streamlit-expanderHeader {
+        background: rgba(26, 26, 46, 0.6) !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color) !important;
+        padding: 0.6rem 1rem !important;
         font-size: 0.9rem !important;
-        background: var(--surface-light) !important;
-        border-radius: 8px;
-        padding: 0.2rem 0.5rem;
     }
-
-    /* ===== COLUMNS ===== */
-    [data-testid="column"] {
-        padding: 0 0.6rem;
+    
+    .streamlit-expanderHeader:hover {
+        background: rgba(102, 126, 234, 0.1) !important;
+        border-color: var(--accent-color) !important;
     }
-
+    
+    /* Compact Divider */
     hr {
         border: none;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
-        margin: 2rem 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+        margin: 1rem 0;
     }
-
-    /* ===== PREMIUM BADGES ===== */
-    .premium-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.4rem 1rem;
-        border-radius: 50px;
-        background: var(--gradient-primary);
-        color: white;
-        font-size: 0.85rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    
+    /* Compact Radio Buttons */
+    .stRadio > label {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
     }
-
-    /* ===== RESPONSIVE DESIGN ===== */
+    
+    /* Compact File Uploader */
+    [data-testid="stFileUploader"] {
+        background: rgba(26, 26, 46, 0.6);
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: var(--accent-color);
+        background: rgba(102, 126, 234, 0.05);
+    }
+    
+    /* Compact Labels */
+    label {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Compact Caption */
+    .caption, small {
+        color: var(--text-secondary) !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Column Spacing */
+    [data-testid="column"] {
+        padding: 0 0.5rem;
+    }
+    
+    /* Responsive Design */
     @media (max-width: 768px) {
         .main .block-container {
-            padding: 1.5rem;
-            height: calc(100vh - 3rem);
+            padding: 0.5rem 1rem;
         }
+        
         h1 {
-            font-size: 2.2rem !important;
+            font-size: 2rem !important;
         }
+        
         h2 {
-            font-size: 1.6rem !important;
+            font-size: 1.3rem !important;
         }
+        
         [data-testid="column"] {
-            min-width: 100% !important;
-            padding: 0 0.3rem;
-        }
-        [data-testid="stMetricValue"] {
-            font-size: 1.6rem !important;
+            padding: 0 0.25rem;
         }
     }
-
-    @media (min-width: 769px) and (max-width: 1199px) {
-        .main .block-container {
-            padding: 1.8rem 2rem;
-            max-width: 100%;
-        }
-    }
-
-    @media (min-width: 1440px) {
-        .main .block-container {
-            max-width: 1600px;
-            padding: 2.5rem 3rem;
-        }
-        h1 {
-            font-size: 3.6rem !important;
-        }
-    }
-
-    /* ===== ANIMATIONS ===== */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
+    
+    /* Remove Extra Spacing */
     .element-container {
-        animation: fadeInUp 0.6s ease-out;
+        margin: 0.3rem 0 !important;
     }
-
-    @keyframes shimmer {
-        0% {
-            background-position: -1000px 0;
-        }
-        100% {
-            background-position: 1000px 0;
-        }
+    
+    div[data-testid="stVerticalBlock"] > div {
+        gap: 0.5rem;
     }
-
-    .shimmer {
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-        background-size: 1000px 100%;
-        animation: shimmer 2s infinite;
+    
+    /* Compact JSON Display */
+    .stJson {
+        max-height: 300px;
+        overflow-y: auto;
+        font-size: 0.85rem;
     }
     </style>
     """, unsafe_allow_html=True)
 
+# Streamlit Page Config
 st.set_page_config(
-    page_title="Figma UI Extractor | Premium Enterprise",
-    page_icon="✨",
+    page_title="Figma UI Extractor | Professional Edition",
+    page_icon="🎨",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-apply_premium_styling()
+apply_professional_styling()
 
-# =====================================================
-# CORE UTILITY FUNCTIONS
-# =====================================================
+# -----------------------------------------------------
+# UTILITY HELPERS
+# -----------------------------------------------------
+
 def build_headers(token: str) -> Dict[str, str]:
-    """Build request headers with Figma authentication"""
     return {"Accept": "application/json", "X-Figma-Token": token}
 
 def chunked(lst: List[str], n: int):
-    """Split list into chunks of size n"""
     for i in range(0, len(lst), n):
         yield lst[i:i+n]
 
 def to_rgba(color: Dict[str, Any]) -> str:
-    """Convert Figma color object to RGBA CSS string"""
     try:
         r = int(float(color.get("r", 0)) * 255)
         g = int(float(color.get("g", 0)) * 255)
         b = int(float(color.get("b", 0)) * 255)
         a = float(color.get("a", color.get("opacity", 1)))
         return f"rgba({r},{g},{b},{a})"
-    except Exception:
+    except:
         return "rgba(0,0,0,1)"
 
 def is_nonempty_list(v: Any) -> bool:
-    """Check if value is a non-empty list"""
     return isinstance(v, list) and len(v) > 0
 
 def is_visible(node: Dict[str, Any]) -> bool:
-    """Check if node is visible in Figma"""
     v = node.get("visible")
     return True if v is None else bool(v)
 
 def filter_invisible_nodes(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Recursively filter out invisible nodes from tree"""
     if not is_visible(node):
         return None
     if "children" in node:
@@ -624,35 +482,41 @@ def filter_invisible_nodes(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         node["children"] = filtered
     return node
 
-# =====================================================
-# FIGMA API FUNCTIONS
-# =====================================================
+# -------------------------
+# FIGMA API + NODE WALKERS
+# -------------------------
+
 def fetch_figma_nodes(file_key: str, node_ids: str, token: str, timeout: int = 60) -> Dict[str, Any]:
-    """Fetch nodes from Figma API"""
+    """
+    Fetch node(s) from Figma file. If node_ids is empty, fetch entire file document.
+    Returns the raw JSON payload returned by the Figma API.
+    """
     headers = build_headers(token)
     url = f"https://api.figma.com/v1/files/{file_key}/nodes"
     params = {"ids": node_ids} if node_ids else {}
-    
-    resp = requests.get(url, headers=headers, params=params, timeout=timeout)
-    
-    if not resp.ok:
-        raise RuntimeError(f"Figma API error {resp.status_code}: {resp.text}")
-    
-    data = resp.json()
-    
-    # Filter invisible nodes
+    r = requests.get(url, headers=headers, params=params, timeout=timeout)
+    if not r.ok:
+        raise RuntimeError(f"Figma API error {r.status_code}: {r.text}")
+    data = r.json()
+    # filter invisible nodes in place (if present as document)
     if isinstance(data.get("nodes"), dict):
         for k, v in list(data["nodes"].items()):
             doc = v.get("document")
             if isinstance(doc, dict):
                 data["nodes"][k]["document"] = filter_invisible_nodes(doc)
-    elif isinstance(data.get("document"), dict):
-        data["document"] = filter_invisible_nodes(data["document"])
-    
+    else:
+        # fallback: if the payload contains a top-level document
+        if isinstance(data.get("document"), dict):
+            data["document"] = filter_invisible_nodes(data["document"])
     return data
 
 def walk_nodes_collect_images_and_ids(nodes_payload: Dict[str, Any]) -> Tuple[Set[str], List[str], Dict[str, Dict[str, str]]]:
-    """Walk node tree and collect image references and node metadata"""
+    """
+    Walks the nodes payload and returns:
+      - a set of image refs (imageHash / imageRef found in fills/strokes),
+      - a list of node ids encountered (for render API),
+      - a minimal node_meta mapping id -> {id, name, type}
+    """
     image_refs: Set[str] = set()
     node_ids: List[str] = []
     node_meta: Dict[str, Dict[str, str]] = {}
@@ -663,72 +527,64 @@ def walk_nodes_collect_images_and_ids(nodes_payload: Dict[str, Any]) -> Tuple[Se
         nid = n.get("id")
         if nid:
             node_ids.append(nid)
-            node_meta[nid] = {
-                "id": nid,
-                "name": n.get("name", ""),
-                "type": n.get("type", "")
-            }
-        
-        # Collect image fills
+            node_meta[nid] = {"id": nid, "name": n.get("name", ""), "type": n.get("type", "")}
+        # fills
         for f in n.get("fills", []) or []:
             if isinstance(f, dict) and f.get("type") == "IMAGE":
                 ref = f.get("imageRef") or f.get("imageHash")
                 if ref:
                     image_refs.add(ref)
-        
-        # Collect image strokes
+        # strokes
         for s in n.get("strokes", []) or []:
             if isinstance(s, dict) and s.get("type") == "IMAGE":
                 ref = s.get("imageRef") or s.get("imageHash")
                 if ref:
                     image_refs.add(ref)
-        
-        # Process children recursively
+        # children
         for c in n.get("children", []) or []:
             visit(c)
 
-    # Process payload
+    # nodes may be under 'nodes' dict (when using /nodes endpoint)
     if isinstance(nodes_payload.get("nodes"), dict):
         for entry in nodes_payload["nodes"].values():
             doc = entry.get("document")
             if isinstance(doc, dict):
                 visit(doc)
-    
+    # or a top-level document
     if isinstance(nodes_payload.get("document"), dict):
         visit(nodes_payload["document"])
 
-    # Deduplicate node IDs
+    # de-duplicate node_ids preserving order
     seen = set()
-    unique_ids: List[str] = []
+    unique_node_ids = []
     for nid in node_ids:
         if nid not in seen:
             seen.add(nid)
-            unique_ids.append(nid)
+            unique_node_ids.append(nid)
 
-    return image_refs, unique_ids, node_meta
+    return image_refs, unique_node_ids, node_meta
 
-def resolve_image_urls(
-    file_key: str, 
-    image_refs: Set[str], 
-    node_ids: List[str], 
-    token: str, 
-    timeout: int = 60
-) -> Tuple[Dict[str, str], Dict[str, Optional[str]]]:
-    """Resolve image URLs from Figma API"""
+def resolve_image_urls(file_key: str, image_refs: Set[str], node_ids: List[str], token: str, timeout: int = 60) -> Tuple[Dict[str, str], Dict[str, Optional[str]]]:
+    """
+    Resolve:
+      - fills_map: mapping of imageRef -> url (from /images endpoint)
+      - renders_map: mapping of nodeId -> rendered image url (from /images with ids param)
+    Returns (filtered_fills_map, renders_map)
+    """
     headers = build_headers(token)
     fills_map: Dict[str, str] = {}
-    
-    # Fetch fill images
     try:
         fills_url = f"https://api.figma.com/v1/files/{file_key}/images"
-        params = {"ids": ",".join(list(image_refs))} if image_refs else {}
+        # Request all known imageRefs in one go if possible
+        params = {}
+        if image_refs:
+            params["ids"] = ",".join(list(image_refs))
         r = requests.get(fills_url, headers=headers, params=params or None, timeout=timeout)
         if r.ok:
             fills_map = r.json().get("images", {}) or {}
     except Exception:
         fills_map = {}
 
-    # Fetch rendered images
     renders_map: Dict[str, Optional[str]] = {}
     if node_ids:
         base_render = f"https://api.figma.com/v1/images/{file_key}"
@@ -746,16 +602,14 @@ def resolve_image_urls(
             except Exception:
                 for nid in batch:
                     renders_map[nid] = None
-    
     return {k: v for k, v in fills_map.items() if k in image_refs}, renders_map
 
-def build_icon_map(
-    nodes_payload: Dict[str, Any],
-    filtered_fills: Dict[str, str],
-    renders_map: Dict[str, Optional[str]],
-    node_meta: Dict[str, Dict[str, str]]
-) -> Dict[str, str]:
-    """Build mapping of node IDs to image URLs"""
+def build_icon_map(nodes_payload: Dict[str, Any], filtered_fills: Dict[str, str], renders_map: Dict[str, Optional[str]], node_meta: Dict[str, Dict[str, str]]) -> Dict[str, str]:
+    """
+    For each node id in node_meta, find the first image reference in its fills (if any),
+    prefer fills_map[imageRef] if available otherwise fallback to renders_map[nodeId].
+    Returns node_id -> url mapping.
+    """
     node_first_ref: Dict[str, str] = {}
 
     def map_first_image(n: Dict[str, Any]):
@@ -772,17 +626,15 @@ def build_icon_map(
         for c in n.get("children", []) or []:
             map_first_image(c)
 
-    # Process payload
+    # Walk same places we walked earlier
     if isinstance(nodes_payload.get("nodes"), dict):
         for entry in nodes_payload["nodes"].values():
             doc = entry.get("document")
             if isinstance(doc, dict):
                 map_first_image(doc)
-    
     if isinstance(nodes_payload.get("document"), dict):
         map_first_image(nodes_payload["document"])
 
-    # Build final mapping
     node_to_url: Dict[str, str] = {}
     for nid in node_meta.keys():
         url = None
@@ -793,11 +645,12 @@ def build_icon_map(
             url = renders_map.get(nid) or None
         if url:
             node_to_url[nid] = url
-    
     return node_to_url
 
 def merge_urls_into_nodes(nodes_payload: Dict[str, Any], node_to_url: Dict[str, str]) -> Dict[str, Any]:
-    """Deep copy payload and inject image URLs into nodes"""
+    """
+    Deep copy nodes_payload and inject `image_url` into nodes whose id exists in node_to_url.
+    """
     merged = copy.deepcopy(nodes_payload)
 
     def inject(n: Dict[str, Any]):
@@ -814,40 +667,28 @@ def merge_urls_into_nodes(nodes_payload: Dict[str, Any], node_to_url: Dict[str, 
             doc = entry.get("document")
             if isinstance(doc, dict):
                 inject(doc)
-    
     if isinstance(merged.get("document"), dict):
         inject(merged["document"])
-    
     return merged
 
-# =====================================================
-# COMPONENT EXTRACTION LOGIC
-# =====================================================
+# -------------------------
+# EXTRACTION HELPERS
+# -------------------------
+
 def extract_bounds(node: Dict[str, Any]) -> Optional[Dict[str, float]]:
-    """Extract absolute bounding box"""
     box = node.get("absoluteBoundingBox")
     if isinstance(box, dict) and all(k in box for k in ("x", "y", "width", "height")):
         try:
-            return {
-                "x": float(box["x"]),
-                "y": float(box["y"]),
-                "width": float(box["width"]),
-                "height": float(box["height"])
-            }
+            return {"x": float(box["x"]), "y": float(box["y"]), "width": float(box["width"]), "height": float(box["height"])}
         except Exception:
             return None
     return None
 
 def extract_layout(node: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract layout properties"""
-    keys = [
-        'layoutMode', 'constraints', 'paddingLeft', 'paddingRight',
-        'paddingTop', 'paddingBottom', 'itemSpacing', 'counterAxisAlignItems',
-        'primaryAxisAlignItems', 'layoutGrow', 'layoutAlign',
-        'layoutSizingHorizontal', 'layoutSizingVertical',
-        'counterAxisSizingMode', 'primaryAxisSizingMode',
-        'clipsContent', 'layoutWrap', 'layoutGrids'
-    ]
+    keys = ['layoutMode', 'constraints', 'paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom',
+            'itemSpacing', 'counterAxisAlignItems', 'primaryAxisAlignItems', 'layoutGrow', 'layoutAlign',
+            'layoutSizingHorizontal', 'layoutSizingVertical', 'counterAxisSizingMode', 'primaryAxisSizingMode',
+            'clipsContent', 'layoutWrap', 'layoutGrids']
     layout: Dict[str, Any] = {}
     for k in keys:
         if k in node:
@@ -855,10 +696,7 @@ def extract_layout(node: Dict[str, Any]) -> Dict[str, Any]:
     return layout
 
 def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract visual styling properties"""
     styling: Dict[str, Any] = {}
-    
-    # Process fills
     fills = node.get("fills")
     if is_nonempty_list(fills):
         parsed: List[Dict[str, Any]] = []
@@ -884,11 +722,9 @@ def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
         if parsed:
             styling["fills"] = parsed
 
-    # Background color
     if "backgroundColor" in node and isinstance(node["backgroundColor"], dict):
         styling["backgroundColor"] = to_rgba(node["backgroundColor"])
 
-    # Process strokes
     strokes = node.get("strokes")
     if is_nonempty_list(strokes):
         borders: List[Dict[str, Any]] = []
@@ -909,11 +745,9 @@ def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
         if borders:
             styling["borders"] = borders
 
-    # Corner radius
     if isinstance(node.get("cornerRadius"), (int, float)) and node.get("cornerRadius", 0) > 0:
         styling["cornerRadius"] = node.get("cornerRadius")
 
-    # Process effects
     effects = node.get("effects")
     if is_nonempty_list(effects):
         parsed: List[Dict[str, Any]] = []
@@ -939,12 +773,9 @@ def extract_visuals(node: Dict[str, Any]) -> Dict[str, Any]:
     return styling
 
 def extract_text(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Extract text content and typography"""
     if (node.get("type") or "").upper() != "TEXT":
         return None
-    
     t: Dict[str, Any] = {"content": node.get("characters", "")}
-    
     style = node.get("style") or {}
     if isinstance(style, dict):
         t["typography"] = {
@@ -956,36 +787,20 @@ def extract_text(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             "textAlign": (style.get("textAlignHorizontal") or "left").lower(),
             "textCase": (style.get("textCase") or "none").lower()
         }
-    
     fills = node.get("fills")
     if is_nonempty_list(fills):
         for f in fills:
             if isinstance(f, dict) and f.get("type") == "SOLID" and "color" in f:
                 t["color"] = to_rgba(f["color"])
                 break
-    
     return t
 
 def should_include(node: Dict[str, Any]) -> bool:
-    """Determine if node should be included in extraction"""
     t = (node.get("type") or "").upper()
     name = (node.get("name") or "").lower()
-    has_visual = bool(
-        node.get("fills") or 
-        node.get("strokes") or 
-        node.get("effects") or 
-        node.get("image_url")
-    )
-    semantic = any(k in name for k in [
-        'button', 'input', 'search', 'nav', 'menu',
-        'container', 'card', 'panel', 'header',
-        'footer', 'badge', 'chip'
-    ])
-    vector_visible = (
-        t in ['VECTOR', 'LINE', 'ELLIPSE', 'POLYGON', 'STAR', 'RECTANGLE'] and 
-        (node.get("strokes") or node.get("fills"))
-    )
-    
+    has_visual = bool(node.get("fills") or node.get("strokes") or node.get("effects") or node.get("image_url"))
+    semantic = any(k in name for k in ['button', 'input', 'search', 'nav', 'menu', 'container', 'card', 'panel', 'header', 'footer', 'badge', 'chip'])
+    vector_visible = (t in ['VECTOR', 'LINE', 'ELLIPSE', 'POLYGON', 'STAR', 'RECTANGLE'] and (node.get("strokes") or node.get("fills")))
     return any([
         t == 'TEXT',
         has_visual,
@@ -997,10 +812,8 @@ def should_include(node: Dict[str, Any]) -> bool:
     ])
 
 def classify_bucket(comp: Dict[str, Any]) -> str:
-    """Classify component into category"""
     t = (comp.get("type") or "").upper()
     name = (comp.get("name") or "").lower()
-    
     if t == "TEXT":
         return "textElements"
     if "button" in name:
@@ -1015,408 +828,284 @@ def classify_bucket(comp: Dict[str, Any]) -> str:
         return "vectors"
     if t in ['FRAME', 'GROUP', 'COMPONENT', 'INSTANCE', 'SECTION'] or any(k in name for k in ['container', 'card', 'panel', 'section']):
         return "containers"
-    
     return "other"
 
-def extract_components(
-    root: Dict[str, Any],
-    parent_path: str = "",
-    out: Optional[List[Dict[str, Any]]] = None
-) -> List[Dict[str, Any]]:
-    """Recursively extract components from node tree"""
+def extract_components(root: Dict[str, Any], parent_path: str = "", out: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
     if out is None:
         out = []
     if root is None or not isinstance(root, dict):
         return out
-    
     path = f"{parent_path}/{root.get('name','Unnamed')}" if parent_path else (root.get('name') or 'Root')
-    
-    comp: Dict[str, Any] = {
-        'id': root.get('id'),
-        'name': root.get('name'),
-        'type': root.get('type'),
-        'path': path
-    }
-    
+    comp: Dict[str, Any] = {'id': root.get('id'), 'name': root.get('name'), 'type': root.get('type'), 'path': path}
     bounds = extract_bounds(root)
     if bounds:
         comp['position'] = bounds
-    
     layout = extract_layout(root)
     if layout:
         comp['layout'] = layout
-    
     styling = extract_visuals(root)
     if styling:
         comp['styling'] = styling
-    
+    # two possible keys for injected image url
     if root.get('image_url'):
         comp['imageUrl'] = root.get('image_url')
     if root.get('imageUrl'):
         comp['imageUrl'] = root.get('imageUrl')
-    
     text = extract_text(root)
     if text:
         comp['text'] = text
-    
     if should_include(root):
         out.append(comp)
-    
     for child in root.get('children', []) or []:
         if isinstance(child, dict):
             extract_components(child, path, out)
-    
     return out
 
 def find_document_roots(nodes_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Find all document root nodes"""
     roots: List[Dict[str, Any]] = []
-    
     if isinstance(nodes_payload.get('nodes'), dict):
         for v in nodes_payload['nodes'].values():
             if isinstance(v, dict) and isinstance(v.get('document'), dict):
                 roots.append(v['document'])
         if roots:
             return roots
-    
     if isinstance(nodes_payload.get('document'), dict):
         roots.append(nodes_payload['document'])
-    
+        return roots
     return roots
 
+def organize_for_angular(components: List[Dict[str, Any]]) -> Dict[str, Any]:
+    organized = {
+        'metadata': {'totalComponents': len(components), 'extractedAt': datetime.datetime.utcnow().isoformat() + 'Z', 'version': 1},
+        'textElements': [], 'buttons': [], 'inputs': [], 'containers': [],
+        'images': [], 'navigation': [], 'vectors': [], 'other': []
+    }
+    for c in components:
+        organized.setdefault(classify_bucket(c), []).append(c)
+    return organized
+
 def extract_ui_components(merged_payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract and organize all UI components"""
     roots = find_document_roots(merged_payload)
     if not roots:
         raise RuntimeError("No document roots found in payload")
-    
     all_components: List[Dict[str, Any]] = []
     for r in roots:
         if isinstance(r, dict):
             extract_components(r, "", all_components)
-    
-    organized = {
-        'metadata': {
-            'totalComponents': len(all_components),
-            'extractedAt': datetime.datetime.utcnow().isoformat() + 'Z',
-            'version': 1
-        },
-        'textElements': [],
-        'buttons': [],
-        'inputs': [],
-        'containers': [],
-        'images': [],
-        'navigation': [],
-        'vectors': [],
-        'other': []
-    }
-    
-    for c in all_components:
-        organized.setdefault(classify_bucket(c), []).append(c)
-    
-    return organized
+    return organize_for_angular(all_components)
 
 def remove_url_prefix_from_json(payload: Dict[str, Any], url_prefix: str) -> Dict[str, Any]:
-    """Remove URL prefix from image URLs"""
+    """
+    Removes url_prefix from any imageUrl or image_url values in the payload.
+    Returns a deep-copied processed payload.
+    """
     p = copy.deepcopy(payload)
-    
     def process(obj: Any):
         if isinstance(obj, dict):
             for k, v in list(obj.items()):
-                if k in ("imageUrl", "image_url") and isinstance(v, str) and v.startswith(url_prefix):
-                    obj[k] = v.replace(url_prefix, "", 1)
+                if k in ("imageUrl", "image_url") and isinstance(v, str):
+                    if v.startswith(url_prefix):
+                        obj[k] = v.replace(url_prefix, "", 1)
                 else:
                     process(v)
         elif isinstance(obj, list):
             for item in obj:
                 process(item)
-    
     process(p)
     return p
 
-# =====================================================
-# MAIN UI
-# =====================================================
+# -------------------------
+# STREAMLIT UI + WORKFLOW
+# -------------------------
+
 def main():
-    """Main application interface"""
-    
-    # Premium Hero Section
+    # Compact Hero Header
     st.markdown("""
-    <div class="luxury-card" style="margin-bottom: 2rem; text-align: center;">
-        <div class="premium-badge" style="margin-bottom: 1.2rem;">
-            <span>✨</span>
-            <span>Premium Enterprise Edition</span>
+    <div style='text-align: center; padding: 1.5rem 0 1rem 0;'>
+        <div style='display: inline-block; padding: 0.4rem 1.2rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); border-radius: 50px; border: 1px solid rgba(102, 126, 234, 0.3); margin-bottom: 1rem;'>
+            <span style='font-size: 0.8rem; font-weight: 600; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em;'>✨ Enterprise Edition</span>
         </div>
-        <h1>Figma UI Extractor</h1>
-        <p style="font-size: 1.15rem; max-width: 700px; margin: 0.8rem auto; color: var(--text-muted);">
-            Extract structured UI metadata, design tokens, and image assets from Figma with enterprise-grade precision and professional workflow automation.
+        <h1 style='margin-bottom: 0.5rem; font-size: 2.5rem;'>🎨 Figma UI Extractor</h1>
+        <p style='font-size: 1rem; color: #a0a0c0; font-weight: 400; max-width: 700px; margin: 0 auto; line-height: 1.5;'>
+            Extract, analyze, and export UI components from Figma with precision
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Luxury Sidebar
+    # Compact Sidebar
     with st.sidebar:
-        st.markdown("### 📊 Analytics Dashboard")
+        st.markdown("### ⚙️ Dashboard")
         st.markdown("---")
 
         if 'stats' not in st.session_state:
-            st.session_state['stats'] = {
-                'files_processed': 0,
-                'downloads': 0,
-                'total_components': 0
-            }
+            st.session_state['stats'] = {'files_processed': 0, 'downloads': 0}
 
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Files Processed", st.session_state['stats']['files_processed'])
+            st.metric("Files", st.session_state['stats']['files_processed'])
         with col2:
             st.metric("Downloads", st.session_state['stats']['downloads'])
 
-        if st.session_state['stats']['total_components'] > 0:
-            st.metric("Components Extracted", st.session_state['stats']['total_components'])
-
         st.markdown("---")
-        st.markdown("### ✨ Premium Features")
+        st.markdown("### 🎯 Features")
         st.markdown("""
-        - **🎯 Smart Component Discovery** – Automated detection
-        - **🎨 Design Token Extraction** – Complete styling data
-        - **🖼️ Image Resolution** – SVG & raster support
-        - **📦 Structured Export** – Angular-ready JSON
-        - **⚡ High Performance** – Optimized API calls
-        - **🔒 Enterprise Security** – Token protection
+        - **Smart Extraction** - Automated detection
+        - **Style Parsing** - Complete tokens
+        - **Image Resolution** - SVG support
+        - **JSON Export** - Structured output
         """)
         
         st.markdown("---")
-        st.markdown("### 📚 Documentation")
-        st.markdown("""
-        - [Figma API Reference](https://www.figma.com/developers/api)
-        - [Angular Material Design](https://material.angular.io)
-        - [Design System Tokens](https://designtokens.org)
-        """)
-        
-        st.markdown("---")
-        st.markdown("### 🔐 Security & Privacy")
-        st.info("🔒 All tokens are processed in-memory only and never stored or logged. Your data remains completely private and secure.")
+        st.markdown("### 🔐 Security")
+        st.info("🔒 Session-based processing")
 
-    # Main Extraction Interface
-    st.markdown("### 🎯 Component Extraction Workspace")
-    st.markdown("Configure your Figma file details below to generate a comprehensive, structured component catalog.")
+    # Main Content
+    st.markdown("### 🎯 Component Extraction")
     
-    st.markdown("")
-
     col1, col2 = st.columns(2)
     with col1:
         file_key = st.text_input(
-            "📁 Figma File Key",
-            value="",
-            placeholder="e.g., AbCdEf123XYZ",
-            help="Extract the file key from your Figma file URL: figma.com/file/[FILE_KEY]/..."
+            "📁 Figma File Key", 
+            value="", 
+            help="Enter the file key from your Figma file URL",
+            placeholder="abc123xyz..."
         )
     with col2:
         node_ids = st.text_input(
-            "🔗 Node IDs (Optional)",
-            value="",
-            placeholder="123:456, 789:012",
-            help="Comma-separated node IDs to extract specific components. Leave empty to extract the entire file."
+            "🔗 Node IDs (Optional)", 
+            value="", 
+            help="Comma-separated node IDs. Leave empty for entire file.",
+            placeholder="123:456, 789:012"
         )
 
     token = st.text_input(
-        "🔑 Figma Personal Access Token",
-        type="password",
-        placeholder="Enter your Figma Personal Access Token...",
-        help="Generate a PAT from: Figma → Settings → Account → Personal Access Tokens"
+        "🔑 Figma Personal Access Token", 
+        type="password", 
+        help="Generate token in Figma account settings",
+        placeholder="Enter your Figma token..."
     )
-
-    st.markdown("")
-
-    if st.button("🚀 Start Extraction", use_container_width=True):
+    
+    if st.button("🚀 Extract UI Components", type="primary"):
         if not token or not file_key:
-            st.error("❌ Please provide both a Figma file key and a personal access token to proceed.")
+            st.error("⚠️ Please provide both file key and token.")
         else:
             try:
                 progress = st.progress(0)
                 status = st.empty()
 
-                # Step 1: Fetch nodes
-                status.info("📡 Connecting to Figma API...")
-                progress.progress(10)
+                status.text("📡 Connecting...")
+                progress.progress(5)
                 nodes_payload = fetch_figma_nodes(file_key=file_key, node_ids=node_ids, token=token)
 
-                # Step 2: Analyze structure
-                status.info("🔍 Analyzing component structure...")
-                progress.progress(30)
+                status.text("🖼️ Analyzing...")
+                progress.progress(25)
                 image_refs, node_id_list, node_meta = walk_nodes_collect_images_and_ids(nodes_payload)
 
-                # Step 3: Resolve images
-                status.info("🖼️ Resolving image assets...")
-                progress.progress(55)
-                filtered_fills, renders_map = resolve_image_urls(
-                    file_key, image_refs, node_id_list, token
-                )
+                status.text("🔗 Resolving assets...")
+                progress.progress(50)
+                filtered_fills, renders_map = resolve_image_urls(file_key, image_refs, node_id_list, token)
 
-                # Step 4: Process tokens
-                status.info("🎨 Processing design tokens...")
-                progress.progress(75)
+                status.text("🎨 Processing...")
+                progress.progress(70)
                 node_to_url = build_icon_map(nodes_payload, filtered_fills, renders_map, node_meta)
                 merged_payload = merge_urls_into_nodes(nodes_payload, node_to_url)
 
-                # Step 5: Extract components
-                status.info("📦 Extracting UI components...")
-                progress.progress(90)
+                status.text("📦 Extracting...")
+                progress.progress(85)
                 final_output = extract_ui_components(merged_payload)
 
-                # Step 6: Finalize
-                status.info("✨ Finalizing extraction...")
-                progress.progress(98)
-                sanitized = remove_url_prefix_from_json(
-                    final_output,
-                    "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/"
-                )
-                
+                status.text("✨ Finalizing...")
+                progress.progress(95)
+                sanitized = remove_url_prefix_from_json(final_output, "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/")
                 st.session_state['metadata_json'] = sanitized
                 st.session_state['stats']['files_processed'] += 1
-                st.session_state['stats']['total_components'] = sanitized['metadata']['totalComponents']
-                
                 progress.progress(100)
                 status.empty()
+                st.success("✅ Extraction completed!")
+
+                # Compact Metrics
+                st.markdown("### 📊 Summary")
                 
-                st.success("✅ Extraction completed successfully!")
-                st.balloons()
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Total", sanitized['metadata']['totalComponents'])
+                with col2:
+                    st.metric("Text", len(sanitized.get('textElements', [])))
+                with col3:
+                    st.metric("Buttons", len(sanitized.get('buttons', [])))
+                with col4:
+                    st.metric("Containers", len(sanitized.get('containers', [])))
+
+                # Compact Category Breakdown
+                with st.expander("📋 Category Breakdown"):
+                    col1, col2 = st.columns(2)
+                    
+                    categories = {
+                        'textElements': 'Text',
+                        'buttons': 'Buttons',
+                        'inputs': 'Inputs',
+                        'containers': 'Containers',
+                        'images': 'Images',
+                        'navigation': 'Navigation',
+                        'vectors': 'Vectors',
+                        'other': 'Other'
+                    }
+                    
+                    items = list(categories.items())
+                    mid = len(items) // 2
+                    
+                    with col1:
+                        for key, label in items[:mid]:
+                            count = len(sanitized.get(key, []))
+                            if count > 0:
+                                st.markdown(f"**{label}:** `{count}`")
+                    
+                    with col2:
+                        for key, label in items[mid:]:
+                            count = len(sanitized.get(key, []))
+                            if count > 0:
+                                st.markdown(f"**{label}:** `{count}`")
 
             except Exception as e:
                 st.error(f"❌ Extraction failed: {str(e)}")
-                st.info("💡 Please verify your file key, token validity, and Figma permissions.")
+                st.info("💡 Verify your token and file access.")
 
-    # Results Display
+    # Compact Download Section
     if 'metadata_json' in st.session_state:
-        data = st.session_state['metadata_json']
-        
         st.markdown("---")
-        st.markdown("### 📊 Extraction Summary")
-        st.markdown("")
-
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total Components", data['metadata']['totalComponents'])
-        with col2:
-            st.metric("Text Elements", len(data.get('textElements', [])))
-        with col3:
-            st.metric("Buttons", len(data.get('buttons', [])))
-        with col4:
-            st.metric("Containers", len(data.get('containers', [])))
-
-        st.markdown("")
-
-        with st.expander("📋 Detailed Category Breakdown", expanded=True):
-            col1, col2, col3, col4 = st.columns(4)
-            
-            categories = [
-                ('textElements', '📝 Text', col1),
-                ('buttons', '🔘 Buttons', col2),
-                ('inputs', '📥 Inputs', col3),
-                ('containers', '📦 Containers', col4),
-                ('images', '🖼️ Images', col1),
-                ('navigation', '🧭 Navigation', col2),
-                ('vectors', '✏️ Vectors', col3),
-                ('other', '🔧 Other', col4)
-            ]
-            
-            for key, label, col in categories:
-                with col:
-                    count = len(data.get(key, []))
-                    st.markdown(f"**{label}**")
-                    st.markdown(f"`{count}` components")
-                    st.markdown("")
-
-        st.markdown("---")
-        st.markdown("### 💾 Export & Download")
-        st.markdown("Download your extracted component metadata in structured JSON format.")
-        st.markdown("")
-
-        json_str = json.dumps(data, indent=2, ensure_ascii=False)
+        st.markdown("### 💾 Export")
         
+        json_str = json.dumps(st.session_state['metadata_json'], indent=2, ensure_ascii=False)
+
         col1, col2, col3 = st.columns([2, 1, 1])
         with col1:
             st.download_button(
                 "📥 Download metadata.json",
                 data=json_str,
-                file_name="figma_ui_metadata.json",
+                file_name="metadata.json",
                 mime="application/json",
-                on_click=lambda: st.session_state['stats'].update({
-                    'downloads': st.session_state['stats']['downloads'] + 1
-                }),
+                on_click=lambda: st.session_state['stats'].update({'downloads': st.session_state['stats']['downloads'] + 1}),
                 use_container_width=True
             )
         with col2:
-            size_bytes = len(json_str.encode('utf-8'))
-            if size_bytes < 1024:
-                size = f"{size_bytes}B"
-            elif size_bytes < 1024 * 1024:
-                size = f"{size_bytes/1024:.1f}KB"
-            else:
-                size = f"{size_bytes/(1024*1024):.2f}MB"
-            st.metric("File Size", size)
+            st.metric("Size", f"{len(json_str):,}B")
         with col3:
             st.metric("Format", "JSON")
 
-        st.markdown("")
+        # Compact Preview
+        with st.expander("👁️ Preview"):
+            st.json(st.session_state['metadata_json']['metadata'])
 
-        # Preview Sections
-        with st.expander("👁️ Metadata Preview"):
-            st.json(data['metadata'])
-
-        with st.expander("🔍 Component Samples"):
-            tab1, tab2, tab3, tab4 = st.tabs(["📝 Text Elements", "🔘 Buttons", "📦 Containers", "📊 All Categories"])
-            
-            with tab1:
-                if data.get('textElements'):
-                    st.json(data['textElements'][:3])
-                    if len(data['textElements']) > 3:
-                        st.caption(f"Showing 3 of {len(data['textElements'])} text elements")
-                else:
-                    st.info("No text elements found")
-            
-            with tab2:
-                if data.get('buttons'):
-                    st.json(data['buttons'][:3])
-                    if len(data['buttons']) > 3:
-                        st.caption(f"Showing 3 of {len(data['buttons'])} buttons")
-                else:
-                    st.info("No buttons found")
-            
-            with tab3:
-                if data.get('containers'):
-                    st.json(data['containers'][:3])
-                    if len(data['containers']) > 3:
-                        st.caption(f"Showing 3 of {len(data['containers'])} containers")
-                else:
-                    st.info("No containers found")
-            
-            with tab4:
-                category_counts = {
-                    cat: len(data.get(cat, []))
-                    for cat in ['textElements', 'buttons', 'inputs', 'containers', 'images', 'navigation', 'vectors', 'other']
-                }
-                st.json(category_counts)
-
-    # Premium Footer
+    # Compact Footer
     st.markdown("---")
     st.markdown("""
-    <div style="text-align: center; padding: 2rem 0 1rem 0;">
-        <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 0.5rem; font-weight: 600;">
-            Built with ❤️ for Design Systems & Enterprise Teams
+    <div style='text-align: center; padding: 1rem 0 0.5rem 0;'>
+        <p style='color: #6B7280; font-size: 0.85rem; margin: 0;'>
+            Built with ❤️ using <strong>Streamlit</strong> • v1.0
         </p>
-        <p style="color: var(--text-soft); font-size: 0.9rem; margin-bottom: 0.8rem;">
-            Premium Enterprise Edition • Powered by Figma API • Production-Ready Architecture
-        </p>
-        <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem;">
-            <span style="color: var(--text-soft); font-size: 0.85rem;">🎨 Luxury Gradients</span>
-            <span style="color: var(--text-soft); font-size: 0.85rem;">⚡ High Performance</span>
-            <span style="color: var(--text-soft); font-size: 0.85rem;">📱 Fully Responsive</span>
-            <span style="color: var(--text-soft); font-size: 0.85rem;">🔒 Enterprise Secure</span>
-        </div>
     </div>
     """, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
